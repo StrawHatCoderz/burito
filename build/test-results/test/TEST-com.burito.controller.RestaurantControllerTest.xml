@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.burito.controller.RestaurantControllerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-24T06:57:12.948Z" hostname="Umars-MacBook-Pro.local" time="3.745">
+  <properties/>
+  <testcase name="shouldReturnRestaurants()" classname="com.burito.controller.RestaurantControllerTest" time="0.361"/>
+  <system-out><![CDATA[12:27:13.094 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.burito.controller.RestaurantControllerTest]: RestaurantControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+12:27:13.240 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.burito.BuritoApplication for test class com.burito.controller.RestaurantControllerTest
+12:27:13.243 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.burito.controller.RestaurantControllerTest]: RestaurantControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+12:27:13.254 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.burito.BuritoApplication for test class com.burito.controller.RestaurantControllerTest
+2026-05-24T12:27:13.675+05:30  INFO 73371 --- [burito] [    Test worker] c.b.controller.RestaurantControllerTest  : Starting RestaurantControllerTest using Java 25.0.2 with PID 73371 (started by umarkhaji in /Users/umarkhaji/workspace/mcu/asgard-projects/burito)
+2026-05-24T12:27:13.676+05:30  INFO 73371 --- [burito] [    Test worker] c.b.controller.RestaurantControllerTest  : No active profile set, falling back to 1 default profile: "default"
+2026-05-24T12:27:16.257+05:30  INFO 73371 --- [burito] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-05-24T12:27:16.258+05:30  INFO 73371 --- [burito] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-05-24T12:27:16.262+05:30  INFO 73371 --- [burito] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-05-24T12:27:16.314+05:30  INFO 73371 --- [burito] [    Test worker] c.b.controller.RestaurantControllerTest  : Started RestaurantControllerTest in 2.992 seconds (process running for 4.278)
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (/Users/umarkhaji/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.17.8/f09415827a71be7ed621c7bd02550678f28bc81c/byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>
