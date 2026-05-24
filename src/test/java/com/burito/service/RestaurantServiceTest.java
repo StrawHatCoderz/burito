@@ -3,6 +3,7 @@ package com.burito.service;
 import com.burito.enums.CuisineType;
 import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.RestaurantRepo;
+import com.burito.repository.entities.Address;
 import com.burito.repository.entities.Restaurant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,13 +29,17 @@ class RestaurantServiceTest {
 
   @Test
   void shouldReturnRestaurants() {
+    Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
+            "India","560001");
+
     Restaurant restaurant =
             new Restaurant("AK98",
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
                     20,
-                    true);
+                    true,
+                    address);
 
     when(repo.findAll())
             .thenReturn(List.of(restaurant));
@@ -48,13 +53,18 @@ class RestaurantServiceTest {
   @Test
   void shouldReturnARestaurantWithValidId()
           throws RestaurantNotFoundException {
+
+    Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
+            "India","560001");
+
     Restaurant restaurant =
             new Restaurant("AK98",
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
                     20,
-                    true);
+                    true,
+                    address);
 
     when(repo.findRestaurantByRestaurantId(restaurant.getRestaurantId()))
             .thenReturn(restaurant);

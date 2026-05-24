@@ -1,15 +1,11 @@
 package com.burito.exceptions;
 
-import com.burito.enums.ErrorCodes;
-import lombok.Getter;
+import com.burito.enums.ErrorCode;
+import org.springframework.http.HttpStatus;
 
-@Getter
-public class RestaurantNotFoundException extends Exception {
-
-  private final ErrorCodes errorCode;
-
+public class RestaurantNotFoundException extends APIException {
   public RestaurantNotFoundException(String restaurantId) {
-    super("Restaurant not found with id: " + restaurantId);
-    this.errorCode = ErrorCodes.RESTAURANT_NOT_FOUND;
+    super("Restaurant not found with id: " + restaurantId,
+            ErrorCode.RESTAURANT_NOT_FOUND, HttpStatus.NOT_FOUND);
   }
 }

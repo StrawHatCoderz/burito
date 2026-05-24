@@ -1,5 +1,6 @@
 package com.burito.service;
 
+import com.burito.exceptions.InvalidRestaurantIdException;
 import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.RestaurantRepo;
 import com.burito.repository.entities.Restaurant;
@@ -20,7 +21,11 @@ public class RestaurantService {
     return restaurantRepo.findAll();
   }
 
-  public Restaurant get(String restaurantId) throws RestaurantNotFoundException {
+  public Restaurant get(String restaurantId)
+          throws RestaurantNotFoundException, InvalidRestaurantIdException {
+    if (restaurantId.isEmpty()) {
+      throw new InvalidRestaurantIdException(restaurantId);
+    }
     Restaurant restaurant =
             restaurantRepo.findRestaurantByRestaurantId(restaurantId);
 

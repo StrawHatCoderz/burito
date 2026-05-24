@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.sql.Date;
+
 @Entity
 @Table(name = "restaurant")
 @Getter
@@ -17,21 +19,28 @@ public class Restaurant {
   private String restaurantId;
 
   private String restaurantName;
+  private String description;
   private String cuisineType;
   private double rating;
-  private double estimatedDeliveryTime;
+  private double estDeliveryMinutes;
   private boolean isOpen;
+  private Date createdAt;
+
+  @ManyToOne
+  @JoinColumn(name = "id")
+  private Address address;
 
   public Restaurant(String restaurantId, String restaurantName,
                     String cuisineType,
                     double rating,
-                    double estimatedDeliveryTime,
-                    boolean isOpen) {
+                    double estDeliveryMinutes,
+                    boolean isOpen, Address address) {
     this.restaurantId = restaurantId;
     this.restaurantName = restaurantName;
     this.cuisineType = cuisineType;
     this.rating = rating;
-    this.estimatedDeliveryTime = estimatedDeliveryTime;
+    this.estDeliveryMinutes = estDeliveryMinutes;
     this.isOpen = isOpen;
+    this.address = address;
   }
 }

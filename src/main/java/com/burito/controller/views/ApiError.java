@@ -1,6 +1,6 @@
 package com.burito.controller.views;
 
-import com.burito.enums.ErrorCodes;
+import com.burito.enums.ErrorCode;
 
-public record ApiError(ErrorCodes errorCode, String message) {
+public record ApiError(ErrorCode errorCode, String message) {
 }

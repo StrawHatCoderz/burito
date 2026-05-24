@@ -1,8 +1,9 @@
 package com.burito.controller;
 
 import com.burito.enums.CuisineType;
-import com.burito.enums.ErrorCodes;
+import com.burito.enums.ErrorCode;
 import com.burito.exceptions.RestaurantNotFoundException;
+import com.burito.repository.entities.Address;
 import com.burito.repository.entities.Restaurant;
 import com.burito.service.RestaurantService;
 import org.junit.jupiter.api.Test;
@@ -31,13 +32,17 @@ class RestaurantControllerTest {
 
   @Test
   void shouldReturnRestaurants() throws Exception {
+    Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
+            "India","560001");
+
     Restaurant restaurant =
             new Restaurant("AK98",
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
                     20,
-                    true);
+                    true,
+                    address);
 
     when(restaurantService.list()).thenReturn(List.of(restaurant));
 
@@ -53,13 +58,17 @@ class RestaurantControllerTest {
 
   @Test
   void shouldReturnRequestedRestaurant() throws Exception {
+    Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
+            "India","560001");
+
     Restaurant restaurant =
             new Restaurant("AK98",
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
                     20,
-                    true);
+                    true,
+                    address);
 
     when(restaurantService.get(restaurant.getRestaurantId()))
             .thenReturn(restaurant);
@@ -71,7 +80,8 @@ class RestaurantControllerTest {
             .andExpect(jsonPath("$.data.restaurantName")
                     .value("Spicy Hub"))
             .andExpect(jsonPath("$.data.rating")
-                    .value(4.6));
+                    .value(4.6))
+            .andExpect(jsonPath("$.data.address.city").exists());
   }
 
   @Test
@@ -84,7 +94,7 @@ class RestaurantControllerTest {
             .andExpect(jsonPath("$.success")
                     .value(false))
             .andExpect(jsonPath("error.errorCode")
-                    .value(ErrorCodes.RESTAURANT_NOT_FOUND.toString()))
+                    .value(ErrorCode.RESTAURANT_NOT_FOUND.toString()))
             .andExpect(jsonPath("$.error.message").exists());
   }
 }

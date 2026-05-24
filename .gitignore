@@ -19,4 +19,4 @@ tmp/
 lib/
 
 test-results/
-shell-scripts/
+shell-scripts
