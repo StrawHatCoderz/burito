@@ -1,5 +1,6 @@
 package com.burito.repository.entities;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,13 +17,19 @@ public class Address {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(nullable = false)
   private String street;
 
+  @Column(nullable = false)
   private String city;
 
+  @Column(nullable = false)
   private String state;
 
+  @Column(nullable = false)
   private String country;
+
+  @Column(nullable = false)
   private String zipcode;
 
   public Address(Long id, String street, String city, String state,

@@ -1,0 +1,29 @@
+package com.burito.domain;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.jspecify.annotations.Nullable;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+public class User {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private long userId;
+
+  @Column(nullable = false, unique = true)
+  private String username;
+
+  @Column(nullable = false)
+  private String hashPassword;
+
+  public User(String username, @Nullable String hashPassword) {
+    this.username = username;
+    this.hashPassword = hashPassword;
+  }
+}
