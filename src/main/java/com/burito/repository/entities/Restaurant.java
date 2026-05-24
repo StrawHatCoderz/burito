@@ -22,11 +22,12 @@ public class Restaurant {
   private double estimatedDeliveryTime;
   private boolean isOpen;
 
-  public Restaurant(String restaurantName,
+  public Restaurant(String restaurantId, String restaurantName,
                     String cuisineType,
                     double rating,
                     double estimatedDeliveryTime,
                     boolean isOpen) {
+    this.restaurantId = restaurantId;
     this.restaurantName = restaurantName;
     this.cuisineType = cuisineType;
     this.rating = rating;

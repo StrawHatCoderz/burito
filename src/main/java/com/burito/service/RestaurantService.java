@@ -1,5 +1,6 @@
 package com.burito.service;
 
+import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.RestaurantRepo;
 import com.burito.repository.entities.Restaurant;
 import org.springframework.stereotype.Service;
@@ -17,5 +18,16 @@ public class RestaurantService {
 
   public List<Restaurant> list() {
     return restaurantRepo.findAll();
+  }
+
+  public Restaurant get(String restaurantId) throws RestaurantNotFoundException {
+    Restaurant restaurant =
+            restaurantRepo.findRestaurantByRestaurantId(restaurantId);
+
+    if (restaurant == null) {
+      throw new RestaurantNotFoundException(restaurantId);
+    }
+
+    return restaurant;
   }
 }

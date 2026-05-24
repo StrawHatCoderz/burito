@@ -1,4 +1,6 @@
 package com.burito.controller.views;
 
-public record ApiError(String message) {
+import com.burito.enums.ErrorCodes;
+
+public record ApiError(ErrorCodes errorCode, String message) {
 }

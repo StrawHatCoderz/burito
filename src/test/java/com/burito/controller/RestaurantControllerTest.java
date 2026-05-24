@@ -1,12 +1,16 @@
 package com.burito.controller;
 
 import com.burito.enums.CuisineType;
+import com.burito.enums.ErrorCodes;
+import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.entities.Restaurant;
 import com.burito.service.RestaurantService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,7 +32,8 @@ class RestaurantControllerTest {
   @Test
   void shouldReturnRestaurants() throws Exception {
     Restaurant restaurant =
-            new Restaurant("Spicy Hub",
+            new Restaurant("AK98",
+                    "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
                     20,
@@ -38,11 +43,48 @@ class RestaurantControllerTest {
 
     mockMvc.perform(get("/api/restaurants/"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("success")
+            .andExpect(jsonPath("$.success")
                     .value(true))
-            .andExpect(jsonPath("data[0].restaurantName")
+            .andExpect(jsonPath("$.data[0].restaurantName")
                     .value("Spicy Hub"))
-            .andExpect(jsonPath("data[0].rating")
+            .andExpect(jsonPath("$.data[0].rating")
                     .value(4.6));
+  }
+
+  @Test
+  void shouldReturnRequestedRestaurant() throws Exception {
+    Restaurant restaurant =
+            new Restaurant("AK98",
+                    "Spicy Hub",
+                    CuisineType.INDIAN.toString(),
+                    4.6,
+                    20,
+                    true);
+
+    when(restaurantService.get(restaurant.getRestaurantId()))
+            .thenReturn(restaurant);
+
+    mockMvc.perform(get("/api/restaurants/AK98"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success")
+                    .value(true))
+            .andExpect(jsonPath("$.data.restaurantName")
+                    .value("Spicy Hub"))
+            .andExpect(jsonPath("$.data.rating")
+                    .value(4.6));
+  }
+
+  @Test
+  void shouldReturnNotFoundWhenRequestedWithInvalidId() throws Exception {
+    when(restaurantService.get(anyString()))
+            .thenThrow(new RestaurantNotFoundException(anyString()));
+
+    mockMvc.perform(get("/api/restaurants/invalid_id"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.success")
+                    .value(false))
+            .andExpect(jsonPath("error.errorCode")
+                    .value(ErrorCodes.RESTAURANT_NOT_FOUND.toString()))
+            .andExpect(jsonPath("$.error.message").exists());
   }
 }
