@@ -5,7 +5,7 @@ import com.burito.controller.views.ApiError;
 import com.burito.controller.views.UserRegistrationRequest;
 import com.burito.domain.User;
 import com.burito.exceptions.InvalidCredentialsException;
-import com.burito.exceptions.UsernameAlreadyExistsException;
+import com.burito.exceptions.EmailAlreadyExistsException;
 import com.burito.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +27,10 @@ public class AuthController {
   public ResponseEntity<APIResponse<User>> handleUserRegistration(
           @RequestBody UserRegistrationRequest payload) {
     try {
-      User user = authService.register(payload.username(), payload.password());
+      User user = authService.register(payload.email(), payload.password());
       return ResponseEntity.status(HttpStatus.CREATED)
               .body(APIResponse.success(user));
-    } catch (InvalidCredentialsException | UsernameAlreadyExistsException e) {
+    } catch (InvalidCredentialsException | EmailAlreadyExistsException e) {
       return ResponseEntity.status(e.getHttpStatus())
               .body(APIResponse.error(new ApiError(
                       e.getErrorCode(),

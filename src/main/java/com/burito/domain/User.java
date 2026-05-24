@@ -17,13 +17,13 @@ public class User {
   private long userId;
 
   @Column(nullable = false, unique = true)
-  private String username;
+  private String email;
 
   @Column(nullable = false)
   private String hashPassword;
 
-  public User(String username, @Nullable String hashPassword) {
-    this.username = username;
+  public User(String email, @Nullable String hashPassword) {
+    this.email = email;
     this.hashPassword = hashPassword;
   }
 }
