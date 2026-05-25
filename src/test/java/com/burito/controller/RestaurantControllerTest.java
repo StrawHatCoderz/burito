@@ -5,23 +5,28 @@ import com.burito.enums.ErrorCode;
 import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.entities.Address;
 import com.burito.repository.entities.Restaurant;
+import com.burito.service.JWTService;
 import com.burito.service.RestaurantService;
+import com.burito.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RestaurantController.class)
+@WithMockUser
 class RestaurantControllerTest {
 
   @Autowired
@@ -29,11 +34,23 @@ class RestaurantControllerTest {
 
   @MockitoBean
   private RestaurantService restaurantService;
+  @MockitoBean
+  private JWTService jwtService;
+  @MockitoBean
+  private UserService userService;
+
+  @BeforeEach
+  void setUp() {
+    when(jwtService.extractUsername(anyString()))
+            .thenReturn("testuser");
+    when(jwtService.isValidToken(anyString(), any()))
+            .thenReturn(true);
+  }
 
   @Test
   void shouldReturnRestaurants() throws Exception {
-    Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
-            "India","560001");
+    Address address = new Address(1L, "123 MG Road", "Bangalore", "Karnataka",
+            "India", "560001");
 
     Restaurant restaurant =
             new Restaurant("AK98",
@@ -46,7 +63,8 @@ class RestaurantControllerTest {
 
     when(restaurantService.list()).thenReturn(List.of(restaurant));
 
-    mockMvc.perform(get("/api/restaurants/"))
+    mockMvc.perform(get("/api/restaurants/")
+            .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success")
                     .value(true))
@@ -58,8 +76,8 @@ class RestaurantControllerTest {
 
   @Test
   void shouldReturnRequestedRestaurant() throws Exception {
-    Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
-            "India","560001");
+    Address address = new Address(1L, "123 MG Road", "Bangalore", "Karnataka",
+            "India", "560001");
 
     Restaurant restaurant =
             new Restaurant("AK98",
@@ -73,7 +91,8 @@ class RestaurantControllerTest {
     when(restaurantService.get(restaurant.getRestaurantId()))
             .thenReturn(restaurant);
 
-    mockMvc.perform(get("/api/restaurants/AK98"))
+    mockMvc.perform(get("/api/restaurants/AK98")
+            .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success")
                     .value(true))
@@ -89,7 +108,8 @@ class RestaurantControllerTest {
     when(restaurantService.get(anyString()))
             .thenThrow(new RestaurantNotFoundException(anyString()));
 
-    mockMvc.perform(get("/api/restaurants/invalid_id"))
+    mockMvc.perform(get("/api/restaurants/invalid_id")
+            .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.success")
                     .value(false))

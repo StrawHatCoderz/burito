@@ -5,6 +5,7 @@ import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.RestaurantRepo;
 import com.burito.repository.entities.Address;
 import com.burito.repository.entities.Restaurant;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -50,9 +51,9 @@ class RestaurantServiceTest {
     assertEquals(1, result.size());
   }
 
+  @SneakyThrows
   @Test
-  void shouldReturnARestaurantWithValidId()
-          throws RestaurantNotFoundException {
+  void shouldReturnARestaurantWithValidId() {
 
     Address address = new Address(1L, "123 MG Road","Bangalore","Karnataka",
             "India","560001");
@@ -76,7 +77,7 @@ class RestaurantServiceTest {
   }
 
   @Test
-  void shouldThrowExceptionWithInvalidId() throws RestaurantNotFoundException {
+  void shouldThrowExceptionWithInvalidId() {
     when(repo.findRestaurantByRestaurantId(anyString()))
             .thenReturn(null);
 

@@ -26,4 +26,10 @@ public class User {
     this.email = email;
     this.hashPassword = hashPassword;
   }
+
+  public User(long userId, String email, @Nullable String hashPassword) {
+    this.userId = userId;
+    this.email = email;
+    this.hashPassword = hashPassword;
+  }
 }
