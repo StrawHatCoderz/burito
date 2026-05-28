@@ -17,6 +17,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,7 +54,7 @@ class RestaurantControllerTest {
             "India", "560001");
 
     Restaurant restaurant =
-            new Restaurant("AK98",
+            new Restaurant(UUID.randomUUID(),
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
@@ -80,7 +81,7 @@ class RestaurantControllerTest {
             "India", "560001");
 
     Restaurant restaurant =
-            new Restaurant("AK98",
+            new Restaurant(UUID.randomUUID(),
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,

@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -34,7 +35,7 @@ class RestaurantServiceTest {
             "India","560001");
 
     Restaurant restaurant =
-            new Restaurant("AK98",
+            new Restaurant(UUID.randomUUID(),
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
@@ -59,7 +60,7 @@ class RestaurantServiceTest {
             "India","560001");
 
     Restaurant restaurant =
-            new Restaurant("AK98",
+            new Restaurant(UUID.randomUUID(),
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,

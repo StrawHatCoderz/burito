@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.sql.Date;
+import java.util.UUID;
 
 @Entity
 @Table(name = "restaurant")
@@ -16,7 +17,7 @@ public class Restaurant {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private String restaurantId;
+  private UUID restaurantId;
 
   private String restaurantName;
   private String description;
@@ -27,10 +28,10 @@ public class Restaurant {
   private Date createdAt;
 
   @ManyToOne
-  @JoinColumn(name = "id")
+  @JoinColumn(name = "address_id")
   private Address address;
 
-  public Restaurant(String restaurantId, String restaurantName,
+  public Restaurant(UUID restaurantId, String restaurantName,
                     String cuisineType,
                     double rating,
                     double estDeliveryMinutes,

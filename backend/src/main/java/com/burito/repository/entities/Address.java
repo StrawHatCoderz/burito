@@ -1,6 +1,5 @@
 package com.burito.repository.entities;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +14,7 @@ public class Address {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Long addressId;
 
   @Column(nullable = false)
   private String street;
@@ -32,10 +31,10 @@ public class Address {
   @Column(nullable = false)
   private String zipcode;
 
-  public Address(Long id, String street, String city, String state,
+  public Address(Long addressId, String street, String city, String state,
                  String country,
                  String zipcode) {
-    this.id = id;
+    this.addressId = addressId;
     this.street = street;
     this.city = city;
     this.state = state;
