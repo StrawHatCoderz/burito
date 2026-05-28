@@ -1,4 +1,4 @@
-package com.burito.burito;
+package com.burito;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
