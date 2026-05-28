@@ -1,3 +1,4 @@
-curl --request GET -sL \
-     --url 'http://localhost:8080/api/restaurants/' \
-     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZWFkcG9vbDQ1NkBnbWFpbC5jb20iLCJ1c2VySWQiOiIzMWM0MTllOS03NGJhLTRkNzEtOTUxNC0wY2YwMzQ2NDA4YzYiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc3OTk2MjMzNywiZXhwIjoxNzc5OTY1OTM3fQ.M5H0nHccEYMSvNzVNpc_67cQNDfN_2XDpH8oZdEoyh8'
+TOKEN="${1:-your_jwt_token_here}"
+
+curl -s -X GET http://localhost:8080/api/restaurants/ \
+  -H "Authorization: Bearer $TOKEN" | jq .
