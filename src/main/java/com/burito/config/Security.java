@@ -23,7 +23,7 @@ public class Security {
     httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth ->
-                    auth.requestMatchers("/api/auth/**")
+                    auth.requestMatchers("/api/auth/**", "/api/health")
                             .permitAll()
                             .anyRequest()
                             .authenticated()
