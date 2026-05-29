@@ -80,8 +80,10 @@ class RestaurantControllerTest {
     Address address = new Address(1L, "123 MG Road", "Bangalore", "Karnataka",
             "India", "560001");
 
+    UUID restaurantId = UUID.randomUUID();
+
     Restaurant restaurant =
-            new Restaurant(UUID.randomUUID(),
+            new Restaurant(restaurantId,
                     "Spicy Hub",
                     CuisineType.INDIAN.toString(),
                     4.6,
@@ -92,7 +94,7 @@ class RestaurantControllerTest {
     when(restaurantService.get(restaurant.getRestaurantId()))
             .thenReturn(restaurant);
 
-    mockMvc.perform(get("/api/restaurants/AK98")
+    mockMvc.perform(get(String.format("/api/restaurants/%s", restaurantId))
             .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success")
@@ -105,11 +107,23 @@ class RestaurantControllerTest {
   }
 
   @Test
-  void shouldReturnNotFoundWhenRequestedWithInvalidId() throws Exception {
-    when(restaurantService.get(anyString()))
-            .thenThrow(new RestaurantNotFoundException(anyString()));
+  void shouldReturnBadRequestWhenIdIsNotValidUUID() throws Exception {
+    mockMvc.perform(get("/api/restaurants/not-a-valid-uuid")
+            .header("Authorization", "Bearer testtoken"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.errorCode")
+                    .value(ErrorCode.INVALID_RESTAURANT_ID.toString()))
+            .andExpect(jsonPath("$.error.message").exists());
+  }
 
-    mockMvc.perform(get("/api/restaurants/invalid_id")
+  @Test
+  void shouldReturnNotFoundWhenRequestedWithInvalidId() throws Exception {
+    UUID nonExistentId = UUID.randomUUID();
+    when(restaurantService.get(any(UUID.class)))
+            .thenThrow(new RestaurantNotFoundException(nonExistentId));
+
+    mockMvc.perform(get("/api/restaurants/" + nonExistentId)
             .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.success")

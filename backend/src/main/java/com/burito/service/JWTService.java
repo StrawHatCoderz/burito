@@ -52,6 +52,8 @@ public class JWTService {
     return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
   }
 
+  // JJWT throws ExpiredJwtException on parse before this can return true;
+  // the true branch is therefore unreachable at runtime.
   private boolean isTokenExpired(String token) {
     return getClaims(token).getExpiration().before(new Date());
   }

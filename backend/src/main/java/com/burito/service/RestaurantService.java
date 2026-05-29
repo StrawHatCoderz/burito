@@ -1,12 +1,13 @@
 package com.burito.service;
 
-import com.burito.exceptions.InvalidRestaurantIdException;
 import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.RestaurantRepo;
 import com.burito.repository.entities.Restaurant;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class RestaurantService {
@@ -21,18 +22,8 @@ public class RestaurantService {
     return restaurantRepo.findAll();
   }
 
-  public Restaurant get(String restaurantId)
-          throws RestaurantNotFoundException, InvalidRestaurantIdException {
-    if (restaurantId.isEmpty()) {
-      throw new InvalidRestaurantIdException(restaurantId);
-    }
-    Restaurant restaurant =
-            restaurantRepo.findRestaurantByRestaurantId(restaurantId);
-
-    if (restaurant == null) {
-      throw new RestaurantNotFoundException(restaurantId);
-    }
-
-    return restaurant;
+  public Restaurant get(UUID restaurantId) throws RestaurantNotFoundException {
+    return restaurantRepo.findById(restaurantId)
+            .orElseThrow(() -> new RestaurantNotFoundException(restaurantId));
   }
 }

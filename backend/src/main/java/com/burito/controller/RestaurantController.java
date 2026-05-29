@@ -2,7 +2,6 @@ package com.burito.controller;
 
 import com.burito.controller.views.APIResponse;
 import com.burito.controller.views.ApiError;
-import com.burito.exceptions.InvalidRestaurantIdException;
 import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.entities.Restaurant;
 import com.burito.service.RestaurantService;
@@ -10,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/restaurants")
@@ -28,11 +28,11 @@ public class RestaurantController {
 
   @GetMapping("/{restaurantId}")
   public ResponseEntity<APIResponse<Restaurant>> serveRestaurant(
-          @PathVariable String restaurantId) {
+          @PathVariable UUID restaurantId) {
     try {
       Restaurant restaurant = restaurantService.get(restaurantId);
       return ResponseEntity.ok(APIResponse.success(restaurant));
-    } catch (RestaurantNotFoundException | InvalidRestaurantIdException e) {
+    } catch (RestaurantNotFoundException e) {
       return ResponseEntity.status(e.getHttpStatus())
               .body(APIResponse.error(new ApiError(
                       e.getErrorCode(),

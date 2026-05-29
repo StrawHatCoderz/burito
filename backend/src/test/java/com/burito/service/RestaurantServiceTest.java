@@ -13,10 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,23 +69,23 @@ class RestaurantServiceTest {
                     true,
                     address);
 
-    when(repo.findRestaurantByRestaurantId(restaurant.getRestaurantId()))
-            .thenReturn(restaurant);
+    when(repo.findById(restaurant.getRestaurantId()))
+            .thenReturn(Optional.of(restaurant));
 
     Restaurant result = service.get(restaurant.getRestaurantId());
-    verify(repo).findRestaurantByRestaurantId(restaurant.getRestaurantId());
+    verify(repo).findById(restaurant.getRestaurantId());
 
     assertEquals(result.toString(), restaurant.toString());
   }
 
   @Test
-  void shouldThrowExceptionWithInvalidId() {
-    when(repo.findRestaurantByRestaurantId(anyString()))
-            .thenReturn(null);
+  void shouldThrowNotFoundWhenRestaurantDoesNotExist() {
+    when(repo.findById(any(UUID.class)))
+            .thenReturn(Optional.empty());
 
     assertThrows(RestaurantNotFoundException.class,
-            () -> service.get("invalid_id"));
+            () -> service.get(UUID.randomUUID()));
 
-    verify(repo).findRestaurantByRestaurantId(anyString());
+    verify(repo).findById(any(UUID.class));
   }
 }
