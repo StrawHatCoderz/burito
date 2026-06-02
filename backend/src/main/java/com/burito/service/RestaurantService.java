@@ -2,7 +2,7 @@ package com.burito.service;
 
 import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.repository.RestaurantRepo;
-import com.burito.repository.entities.Restaurant;
+import com.burito.domain.Restaurant;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

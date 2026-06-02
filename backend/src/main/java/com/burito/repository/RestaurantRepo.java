@@ -1,6 +1,6 @@
 package com.burito.repository;
 
-import com.burito.repository.entities.Restaurant;
+import com.burito.domain.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

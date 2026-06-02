@@ -3,7 +3,7 @@ package com.burito.controller;
 import com.burito.controller.views.APIResponse;
 import com.burito.controller.views.ApiError;
 import com.burito.exceptions.RestaurantNotFoundException;
-import com.burito.repository.entities.Restaurant;
+import com.burito.domain.Restaurant;
 import com.burito.service.RestaurantService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

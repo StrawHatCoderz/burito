@@ -1,4 +1,4 @@
-package com.burito.repository.entities;
+package com.burito.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
