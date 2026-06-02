@@ -61,6 +61,12 @@ tasks.withType(Checkstyle).configureEach {
 checkstyleTest.enabled = false
 
 tasks.named('test') {
+	// Auto-configure Testcontainers for Colima when DOCKER_HOST is not already set
+	def colimaSocket = "${System.getenv('HOME')}/.colima/default/docker.sock"
+	if (!System.getenv('DOCKER_HOST') && new File(colimaSocket).exists()) {
+		environment 'DOCKER_HOST', "unix://${colimaSocket}"
+		environment 'TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE', '/var/run/docker.sock'
+	}
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
 }
