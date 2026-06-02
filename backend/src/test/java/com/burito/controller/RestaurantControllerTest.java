@@ -8,11 +8,14 @@ import com.burito.domain.Restaurant;
 import com.burito.service.JWTService;
 import com.burito.service.RestaurantService;
 import com.burito.service.UserService;
+import com.burito.config.Security;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RestaurantController.class)
+@Import(Security.class)
 @WithMockUser
 class RestaurantControllerTest {
 
@@ -66,8 +70,7 @@ class RestaurantControllerTest {
 
     when(restaurantService.list()).thenReturn(List.of(restaurant));
 
-    mockMvc.perform(get("/api/restaurants/")
-            .header("Authorization", "Bearer testtoken"))
+    mockMvc.perform(get("/api/restaurants/"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].restaurantName").value("Spicy Hub"))
@@ -95,8 +98,7 @@ class RestaurantControllerTest {
     when(restaurantService.get(restaurant.getRestaurantId()))
             .thenReturn(restaurant);
 
-    mockMvc.perform(get(String.format("/api/restaurants/%s", restaurantId))
-            .header("Authorization", "Bearer testtoken"))
+    mockMvc.perform(get(String.format("/api/restaurants/%s", restaurantId)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.restaurantName").value("Spicy Hub"))
@@ -106,9 +108,16 @@ class RestaurantControllerTest {
   }
 
   @Test
+  @WithAnonymousUser
+  void shouldAllowAnonymousAccessToRestaurantList() throws Exception {
+    when(restaurantService.list()).thenReturn(List.of());
+    mockMvc.perform(get("/api/restaurants/"))
+            .andExpect(status().isOk());
+  }
+
+  @Test
   void shouldReturnBadRequestWhenIdIsNotValidUUID() throws Exception {
-    mockMvc.perform(get("/api/restaurants/not-a-valid-uuid")
-            .header("Authorization", "Bearer testtoken"))
+    mockMvc.perform(get("/api/restaurants/not-a-valid-uuid"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.errorCode")
@@ -122,8 +131,7 @@ class RestaurantControllerTest {
     when(restaurantService.get(any(UUID.class)))
             .thenThrow(new RestaurantNotFoundException(nonExistentId));
 
-    mockMvc.perform(get("/api/restaurants/" + nonExistentId)
-            .header("Authorization", "Bearer testtoken"))
+    mockMvc.perform(get("/api/restaurants/" + nonExistentId))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.success")
                     .value(false))

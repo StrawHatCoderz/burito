@@ -2,7 +2,6 @@ package com.burito.config;
 
 import com.burito.filter.JwtAuthenticationFilter;
 import com.burito.service.JWTService;
-import com.burito.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +22,7 @@ public class Security {
     httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth ->
-                    auth.requestMatchers("/api/auth/**", "/api/health")
+                    auth.requestMatchers("/api/auth/**", "/api/health", "/api/restaurants/**")
                             .permitAll()
                             .anyRequest()
                             .authenticated()
@@ -49,9 +48,7 @@ public class Security {
   }
 
   @Bean
-  public JwtAuthenticationFilter jwtAuthenticationFilter(
-          JWTService jwtService,
-          UserService userService) {
-    return new JwtAuthenticationFilter(jwtService, userService);
+  public JwtAuthenticationFilter jwtAuthenticationFilter(JWTService jwtService) {
+    return new JwtAuthenticationFilter(jwtService);
   }
 }
