@@ -16,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,18 +62,17 @@ class RestaurantControllerTest {
                     20,
                     true,
                     address);
+    restaurant.setCreatedAt(LocalDate.of(2024, 1, 15));
 
     when(restaurantService.list()).thenReturn(List.of(restaurant));
 
     mockMvc.perform(get("/api/restaurants/")
             .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success")
-                    .value(true))
-            .andExpect(jsonPath("$.data[0].restaurantName")
-                    .value("Spicy Hub"))
-            .andExpect(jsonPath("$.data[0].rating")
-                    .value(4.6));
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].restaurantName").value("Spicy Hub"))
+            .andExpect(jsonPath("$.data[0].rating").value(4.6))
+            .andExpect(jsonPath("$.data[0].createdAt").value("2024-01-15"));
   }
 
   @Test
@@ -90,6 +90,7 @@ class RestaurantControllerTest {
                     20,
                     true,
                     address);
+    restaurant.setCreatedAt(LocalDate.of(2024, 1, 15));
 
     when(restaurantService.get(restaurant.getRestaurantId()))
             .thenReturn(restaurant);
@@ -97,12 +98,10 @@ class RestaurantControllerTest {
     mockMvc.perform(get(String.format("/api/restaurants/%s", restaurantId))
             .header("Authorization", "Bearer testtoken"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success")
-                    .value(true))
-            .andExpect(jsonPath("$.data.restaurantName")
-                    .value("Spicy Hub"))
-            .andExpect(jsonPath("$.data.rating")
-                    .value(4.6))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.restaurantName").value("Spicy Hub"))
+            .andExpect(jsonPath("$.data.rating").value(4.6))
+            .andExpect(jsonPath("$.data.createdAt").value("2024-01-15"))
             .andExpect(jsonPath("$.data.address.city").exists());
   }
 

@@ -1,11 +1,12 @@
 package com.burito.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -25,7 +26,8 @@ public class Restaurant {
   private double rating;
   private double estDeliveryMinutes;
   private boolean isOpen;
-  private Date createdAt;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  private LocalDate createdAt;
 
   @ManyToOne
   @JoinColumn(name = "address_id")

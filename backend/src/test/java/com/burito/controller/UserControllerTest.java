@@ -2,6 +2,7 @@ package com.burito.controller;
 
 import com.burito.domain.User;
 import com.burito.service.AuthService;
+import java.time.LocalDateTime;
 import com.burito.service.JWTService;
 import com.burito.service.UserService;
 import lombok.SneakyThrows;
@@ -36,6 +37,7 @@ class UserControllerTest {
   @SneakyThrows
   void shouldReturnCurrentUserProfile() {
     User user = new User("Wade Wilson", "deadpool456@gmail.com", "hashedPassword");
+    user.setCreatedAt(LocalDateTime.of(2024, 1, 15, 10, 30, 0));
 
     when(authService.getCurrentUser("deadpool456@gmail.com")).thenReturn(user);
 
@@ -44,6 +46,7 @@ class UserControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.email").value("deadpool456@gmail.com"))
             .andExpect(jsonPath("$.data.name").value("Wade Wilson"))
+            .andExpect(jsonPath("$.data.createdAt").value("2024-01-15T10:30:00"))
             .andExpect(jsonPath("$.data.password").doesNotExist());
   }
 

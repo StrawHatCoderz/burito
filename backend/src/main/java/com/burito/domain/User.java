@@ -1,5 +1,6 @@
 package com.burito.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class User {
 
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime createdAt;
 
   public User(String fullName, String email, @Nullable String hashPassword) {
