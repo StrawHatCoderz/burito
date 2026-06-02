@@ -1,9 +1,8 @@
 package com.burito.controller;
 
 import com.burito.controller.views.APIResponse;
-import com.burito.controller.views.ApiError;
-import com.burito.exceptions.RestaurantNotFoundException;
 import com.burito.domain.Restaurant;
+import com.burito.exceptions.APIException;
 import com.burito.service.RestaurantService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,17 +26,8 @@ public class RestaurantController {
   }
 
   @GetMapping("/{restaurantId}")
-  public ResponseEntity<APIResponse<Restaurant>> serveRestaurant(
-          @PathVariable UUID restaurantId) {
-    try {
-      Restaurant restaurant = restaurantService.get(restaurantId);
-      return ResponseEntity.ok(APIResponse.success(restaurant));
-    } catch (RestaurantNotFoundException e) {
-      return ResponseEntity.status(e.getHttpStatus())
-              .body(APIResponse.error(new ApiError(
-                      e.getErrorCode(),
-                      e.getMessage()
-              )));
-    }
+  public ResponseEntity<APIResponse<Restaurant>> serveRestaurant(@PathVariable UUID restaurantId) throws APIException {
+    Restaurant restaurant = restaurantService.get(restaurantId);
+    return ResponseEntity.ok(APIResponse.success(restaurant));
   }
 }
