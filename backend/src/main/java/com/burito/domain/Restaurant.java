@@ -1,5 +1,6 @@
 package com.burito.domain;
 
+import com.burito.enums.CuisineType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -22,7 +23,8 @@ public class Restaurant {
 
   private String restaurantName;
   private String description;
-  private String cuisineType;
+  @Enumerated(EnumType.STRING)
+  private CuisineType cuisineType;
   private double rating;
   private double estDeliveryMinutes;
   private boolean isOpen;
@@ -34,7 +36,7 @@ public class Restaurant {
   private Address address;
 
   public Restaurant(UUID restaurantId, String restaurantName,
-                    String cuisineType,
+                    CuisineType cuisineType,
                     double rating,
                     double estDeliveryMinutes,
                     boolean isOpen, Address address) {

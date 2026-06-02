@@ -1,5 +1,15 @@
 package com.burito.enums;
 
 public enum CuisineType {
-  INDIAN
+  INDIAN,
+  SOUTH_INDIAN,
+  CHINESE,
+  ITALIAN,
+  JAPANESE,
+  MEXICAN,
+  THAI,
+  MEDITERRANEAN,
+  AMERICAN,
+  LEBANESE,
+  KOREAN
 }

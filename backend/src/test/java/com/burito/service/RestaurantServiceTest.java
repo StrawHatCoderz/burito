@@ -38,7 +38,7 @@ class RestaurantServiceTest {
     Restaurant restaurant =
             new Restaurant(UUID.randomUUID(),
                     "Spicy Hub",
-                    CuisineType.INDIAN.toString(),
+                    CuisineType.INDIAN,
                     4.6,
                     20,
                     true,
@@ -63,7 +63,7 @@ class RestaurantServiceTest {
     Restaurant restaurant =
             new Restaurant(UUID.randomUUID(),
                     "Spicy Hub",
-                    CuisineType.INDIAN.toString(),
+                    CuisineType.INDIAN,
                     4.6,
                     20,
                     true,
