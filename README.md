@@ -56,6 +56,6 @@ Or add them to your shell profile to apply automatically.
 | POST   | /api/auth/register          | None     |
 | POST   | /api/auth/login             | None     |
 | GET    | /api/me                     | Bearer   |
-| GET    | /api/restaurants/           | Bearer   |
-| GET    | /api/restaurants/{id}       | Bearer   |
+| GET    | /api/restaurants/           | None     |
+| GET    | /api/restaurants/{id}       | None     |
 | GET    | /api/health                 | None     |
