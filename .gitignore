@@ -3,3 +3,10 @@
 docs/
 requirements/
 .claude/
+memory/
+.idea/
+.vscode/
+
+# Frontend build artifacts and dependencies
+frontend/dist/
+frontend/node_modules/
