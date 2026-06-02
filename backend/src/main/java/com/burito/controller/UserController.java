@@ -3,7 +3,7 @@ package com.burito.controller;
 import com.burito.controller.views.APIResponse;
 import com.burito.controller.views.UserProfileView;
 import com.burito.domain.User;
-import com.burito.repository.UserRepo;
+import com.burito.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class UserController {
-  private final UserRepo userRepo;
+  private final AuthService authService;
 
-  public UserController(UserRepo userRepo) {
-    this.userRepo = userRepo;
+  public UserController(AuthService authService) {
+    this.authService = authService;
   }
 
   @GetMapping("/me")
   public ResponseEntity<APIResponse<UserProfileView>> getCurrentUser(
           @AuthenticationPrincipal UserDetails userDetails) {
-    User user = userRepo.findUserByEmail(userDetails.getUsername());
+    User user = authService.getCurrentUser(userDetails.getUsername());
     return ResponseEntity.ok(APIResponse.success(
             new UserProfileView(user.getUserId(), user.getEmail(), user.getFullName(), user.getCreatedAt())
     ));

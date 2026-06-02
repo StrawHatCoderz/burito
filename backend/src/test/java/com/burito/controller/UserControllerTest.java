@@ -1,7 +1,7 @@
 package com.burito.controller;
 
 import com.burito.domain.User;
-import com.burito.repository.UserRepo;
+import com.burito.service.AuthService;
 import com.burito.service.JWTService;
 import com.burito.service.UserService;
 import lombok.SneakyThrows;
@@ -26,7 +26,7 @@ class UserControllerTest {
   private MockMvc mockMvc;
 
   @MockitoBean
-  private UserRepo userRepo;
+  private AuthService authService;
   @MockitoBean
   private JWTService jwtService;
   @MockitoBean
@@ -37,7 +37,7 @@ class UserControllerTest {
   void shouldReturnCurrentUserProfile() {
     User user = new User("Wade Wilson", "deadpool456@gmail.com", "hashedPassword");
 
-    when(userRepo.findUserByEmail("deadpool456@gmail.com")).thenReturn(user);
+    when(authService.getCurrentUser("deadpool456@gmail.com")).thenReturn(user);
 
     mockMvc.perform(get("/api/me"))
             .andExpect(status().isOk())
