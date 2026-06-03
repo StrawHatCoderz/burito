@@ -2,8 +2,16 @@ import client from '../../shared/api/client'
 import type { ApiResponse } from '../../shared/api/types'
 import type { MenuItem, Restaurant, RestaurantWithMenu } from './types'
 
-export const fetchRestaurants = async (): Promise<Restaurant[]> => {
-  const { data } = await client.get<ApiResponse<Restaurant[]>>('/restaurants/')
+export interface RestaurantSearchParams {
+  search?: string
+  cuisine?: string
+}
+
+export const fetchRestaurants = async (params?: RestaurantSearchParams): Promise<Restaurant[]> => {
+  const query: Record<string, string> = {}
+  if (params?.search) query.search = params.search
+  if (params?.cuisine) query.cuisine = params.cuisine
+  const { data } = await client.get<ApiResponse<Restaurant[]>>('/restaurants/', { params: query })
   return data.data ?? []
 }
 
