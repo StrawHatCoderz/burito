@@ -23,7 +23,7 @@ export const LoginPage = () => {
     try {
       const { data: responseBody } = await client.post('/auth/login', { email, password })
       login(responseBody.data.accessToken)
-      navigate('/')
+      navigate('/restaurants')
     } catch (error) {
       setErrorMessage(extractErrorMessage(error))
     } finally {
