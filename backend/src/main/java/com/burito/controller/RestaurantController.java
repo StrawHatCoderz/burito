@@ -4,7 +4,9 @@ import com.burito.controller.views.APIResponse;
 import com.burito.controller.views.ApiError;
 import com.burito.domain.MenuItem;
 import com.burito.domain.Restaurant;
+import com.burito.enums.CuisineType;
 import com.burito.exceptions.APIException;
+import com.burito.exceptions.InvalidCuisineTypeException;
 import com.burito.service.MenuService;
 import com.burito.service.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,13 +34,26 @@ public class RestaurantController {
     this.menuService = menuService;
   }
 
-  @Operation(summary = "List all restaurants")
+  @Operation(summary = "List restaurants, optionally filtered by name and/or cuisine type")
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Returns the full restaurant list")
+      @ApiResponse(responseCode = "200", description = "Returns the filtered restaurant list"),
+      @ApiResponse(responseCode = "400", description = "cuisine value is not a valid CuisineType — errorCode: INVALID_CUISINE_TYPE",
+          content = @Content(schema = @Schema(implementation = ApiError.class)))
   })
   @GetMapping("/")
-  public ResponseEntity<APIResponse<List<Restaurant>>> serveAllRestaurant() {
-    List<Restaurant> restaurantList = restaurantService.list();
+  public ResponseEntity<APIResponse<List<Restaurant>>> serveAllRestaurant(
+      @Parameter(description = "Case-insensitive name filter") @RequestParam(required = false) String search,
+      @Parameter(description = "Cuisine type filter — must match a CuisineType enum value") @RequestParam(required = false) String cuisine)
+      throws APIException {
+    CuisineType cuisineType = null;
+    if (cuisine != null) {
+      try {
+        cuisineType = CuisineType.valueOf(cuisine.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new InvalidCuisineTypeException(cuisine);
+      }
+    }
+    List<Restaurant> restaurantList = restaurantService.search(search, cuisineType);
     return ResponseEntity.ok(APIResponse.success(restaurantList));
   }
 

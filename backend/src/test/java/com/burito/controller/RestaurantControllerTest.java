@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -74,7 +76,7 @@ class RestaurantControllerTest {
                     address);
     restaurant.setCreatedAt(LocalDate.of(2024, 1, 15));
 
-    when(restaurantService.list()).thenReturn(List.of(restaurant));
+    when(restaurantService.search(isNull(), isNull())).thenReturn(List.of(restaurant));
 
     mockMvc.perform(get("/api/restaurants/"))
             .andExpect(status().isOk())
@@ -82,6 +84,42 @@ class RestaurantControllerTest {
             .andExpect(jsonPath("$.data[0].restaurantName").value("Spicy Hub"))
             .andExpect(jsonPath("$.data[0].rating").value(4.6))
             .andExpect(jsonPath("$.data[0].createdAt").value("2024-01-15"));
+  }
+
+  @Test
+  void shouldReturnFilteredRestaurantsWhenSearchParamProvided() throws Exception {
+    Address address = new Address(1L, "1 Main St", "Bangalore", "Karnataka", "India", "560001");
+    Restaurant restaurant = new Restaurant(UUID.randomUUID(), "Spicy Hub",
+            CuisineType.INDIAN, 4.6, 20, true, address);
+
+    when(restaurantService.search(eq("spicy"), isNull())).thenReturn(List.of(restaurant));
+
+    mockMvc.perform(get("/api/restaurants/").param("search", "spicy"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].restaurantName").value("Spicy Hub"));
+  }
+
+  @Test
+  void shouldReturnFilteredRestaurantsWhenCuisineParamProvided() throws Exception {
+    Address address = new Address(1L, "1 Main St", "Bangalore", "Karnataka", "India", "560001");
+    Restaurant restaurant = new Restaurant(UUID.randomUUID(), "Spice Garden",
+            CuisineType.INDIAN, 4.5, 30, true, address);
+
+    when(restaurantService.search(isNull(), eq(CuisineType.INDIAN))).thenReturn(List.of(restaurant));
+
+    mockMvc.perform(get("/api/restaurants/").param("cuisine", "INDIAN"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].cuisineType").value("INDIAN"));
+  }
+
+  @Test
+  void shouldReturn400WhenInvalidCuisineTypeProvided() throws Exception {
+    mockMvc.perform(get("/api/restaurants/").param("cuisine", "PIZZA"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.errorCode").value(ErrorCode.INVALID_CUISINE_TYPE.toString()));
   }
 
   @Test
@@ -116,7 +154,7 @@ class RestaurantControllerTest {
   @Test
   @WithAnonymousUser
   void shouldAllowAnonymousAccessToRestaurantList() throws Exception {
-    when(restaurantService.list()).thenReturn(List.of());
+    when(restaurantService.search(isNull(), isNull())).thenReturn(List.of());
     mockMvc.perform(get("/api/restaurants/"))
             .andExpect(status().isOk());
   }

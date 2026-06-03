@@ -18,6 +18,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,5 +89,33 @@ class RestaurantServiceTest {
             () -> service.get(UUID.randomUUID()));
 
     verify(repo).findById(any(UUID.class));
+  }
+
+  @Test
+  void shouldReturnAllRestaurantsWhenSearchParamsAreNull() {
+    when(repo.search(null, null)).thenReturn(List.of());
+    service.search(null, null);
+    verify(repo).search(null, null);
+  }
+
+  @Test
+  void shouldSearchByNameOnly() {
+    when(repo.search(eq("spicy"), isNull())).thenReturn(List.of());
+    service.search("spicy", null);
+    verify(repo).search("spicy", null);
+  }
+
+  @Test
+  void shouldFilterByCuisineOnly() {
+    when(repo.search(isNull(), eq(CuisineType.INDIAN))).thenReturn(List.of());
+    service.search(null, CuisineType.INDIAN);
+    verify(repo).search(null, CuisineType.INDIAN);
+  }
+
+  @Test
+  void shouldSearchByNameAndCuisineCombined() {
+    when(repo.search(eq("hub"), eq(CuisineType.INDIAN))).thenReturn(List.of());
+    service.search("hub", CuisineType.INDIAN);
+    verify(repo).search("hub", CuisineType.INDIAN);
   }
 }
