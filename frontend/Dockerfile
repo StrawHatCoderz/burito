@@ -1,3 +1,10 @@
+FROM node:lts-alpine AS dev
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
 FROM node:lts-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -5,7 +12,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine
+FROM nginx:alpine AS production
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000
