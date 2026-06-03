@@ -1,9 +1,17 @@
 package com.burito.controller;
 
 import com.burito.controller.views.APIResponse;
+import com.burito.controller.views.ApiError;
 import com.burito.controller.views.UserProfileView;
 import com.burito.domain.User;
 import com.burito.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "User", description = "Authenticated user profile")
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -20,6 +29,12 @@ public class UserController {
     this.authService = authService;
   }
 
+  @Operation(summary = "Get the current user's profile", security = @SecurityRequirement(name = "bearerAuth"))
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Profile returned successfully"),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid Bearer token",
+          content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
   @GetMapping("/me")
   public ResponseEntity<APIResponse<UserProfileView>> getCurrentUser(
           @AuthenticationPrincipal UserDetails userDetails) {

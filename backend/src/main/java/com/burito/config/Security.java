@@ -22,8 +22,14 @@ public class Security {
     httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth ->
-                    auth.requestMatchers("/api/auth/**", "/api/health", "/api/restaurants/**")
-                            .permitAll()
+                    auth.requestMatchers(
+                                    "/api/auth/**",
+                                    "/api/health",
+                                    "/api/restaurants/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/v3/api-docs/**"
+                            ).permitAll()
                             .anyRequest()
                             .authenticated()
             )
