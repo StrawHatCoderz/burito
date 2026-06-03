@@ -4,6 +4,7 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { HomePage } from '../features/home/HomePage'
 import { RestaurantsPage } from '../features/catalog/RestaurantsPage'
+import { RestaurantDetailPage } from '../features/catalog/RestaurantDetailPage'
 
 export const Router = () => (
   <BrowserRouter>
@@ -11,6 +12,7 @@ export const Router = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/restaurants" element={<RestaurantsPage />} />
+      <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
       <Route
         path="/"
         element={
