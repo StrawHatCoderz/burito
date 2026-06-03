@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
+import InputAdornment from '@mui/material/InputAdornment'
 import client from '../../shared/api/client'
 import { useAuth } from '../../shared/hooks/useAuth'
 import { extractErrorMessage } from '../../shared/api/types'
@@ -12,6 +13,7 @@ export const LoginPage = () => {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -53,11 +55,27 @@ export const LoginPage = () => {
           />
           <TextField
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             fullWidth
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => setShowPassword((v) => !v)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </Button>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           <Button
             type="submit"
