@@ -2,9 +2,11 @@ package com.burito.service;
 
 import com.burito.controller.views.JWTToken;
 import com.burito.controller.views.UserCreationView;
+import com.burito.domain.RefreshToken;
 import com.burito.domain.User;
 import com.burito.exceptions.EmailAlreadyExistsException;
 import com.burito.exceptions.InvalidCredentialsException;
+import com.burito.exceptions.InvalidRefreshTokenException;
 import com.burito.repository.UserRepo;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,15 +19,18 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final AuthenticationManager authenticationManager;
   private final JWTService jwtService;
+  private final RefreshTokenService refreshTokenService;
 
   public AuthService(UserRepo userRepo,
                      PasswordEncoder passwordEncoder,
                      AuthenticationManager authenticationManager,
-                     JWTService jwtService) {
+                     JWTService jwtService,
+                     RefreshTokenService refreshTokenService) {
     this.userRepo = userRepo;
     this.passwordEncoder = passwordEncoder;
     this.authenticationManager = authenticationManager;
     this.jwtService = jwtService;
+    this.refreshTokenService = refreshTokenService;
   }
 
   public UserCreationView register(String fullName, String email, String password)
@@ -71,7 +76,22 @@ public class AuthService {
     }
 
     User user = userRepo.findUserByEmail(email);
-    return jwtService.sign(user);
+    String accessToken = jwtService.sign(user);
+    RefreshToken refreshToken = refreshTokenService.create(user);
+    return new JWTToken(accessToken, refreshToken.getToken(), JWTService.ACCESS_TOKEN_EXPIRY_MINS);
+  }
+
+  public JWTToken refresh(String refreshTokenStr) throws InvalidRefreshTokenException {
+    RefreshToken existing = refreshTokenService.validate(refreshTokenStr);
+    User user = existing.getUser();
+    refreshTokenService.revoke(refreshTokenStr);
+    String accessToken = jwtService.sign(user);
+    RefreshToken newRefreshToken = refreshTokenService.create(user);
+    return new JWTToken(accessToken, newRefreshToken.getToken(), JWTService.ACCESS_TOKEN_EXPIRY_MINS);
+  }
+
+  public void logout(String refreshTokenStr) {
+    refreshTokenService.revoke(refreshTokenStr);
   }
 
   public User getCurrentUser(String email) {

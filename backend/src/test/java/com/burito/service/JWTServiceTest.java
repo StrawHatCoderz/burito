@@ -1,6 +1,5 @@
 package com.burito.service;
 
-import com.burito.controller.views.JWTToken;
 import com.burito.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,20 +26,17 @@ class JWTServiceTest {
     User user = new User("Wade", "wade@test.com", null);
     user.setUserId(UUID.randomUUID());
 
-    JWTToken result = jwtService.sign(user);
+    String token = jwtService.sign(user);
 
-    assertNotNull(result.token());
-    assertFalse(result.token().isBlank());
-    assertEquals(60.0, result.expiresInMins());
+    assertNotNull(token);
+    assertFalse(token.isBlank());
   }
 
   @Test
   void shouldSignTokenWhenUserIdIsNull() {
     User user = new User("Wade", "wade@test.com", null);
 
-    JWTToken result = jwtService.sign(user);
-
-    assertNotNull(result.token());
+    assertNotNull(jwtService.sign(user));
   }
 
   @Test
@@ -48,16 +44,22 @@ class JWTServiceTest {
     User user = new User("Wade", "wade@test.com", null);
     user.setUserId(UUID.randomUUID());
 
-    String token = jwtService.sign(user).token();
+    assertEquals("wade@test.com", jwtService.extractUsername(jwtService.sign(user)));
+  }
 
-    assertEquals("wade@test.com", jwtService.extractUsername(token));
+  @Test
+  void shouldExtractRoleFromSignedToken() {
+    User user = new User("Wade", "wade@test.com", null);
+    user.setUserId(UUID.randomUUID());
+
+    assertEquals("USER", jwtService.extractRole(jwtService.sign(user)));
   }
 
   @Test
   void shouldReturnTrueForValidTokenAndMatchingUser() {
     User user = new User("Wade", "wade@test.com", null);
     user.setUserId(UUID.randomUUID());
-    String token = jwtService.sign(user).token();
+    String token = jwtService.sign(user);
 
     UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
             .username("wade@test.com")
@@ -72,7 +74,7 @@ class JWTServiceTest {
   void shouldReturnFalseWhenTokenUsernameMismatch() {
     User user = new User("Wade", "wade@test.com", null);
     user.setUserId(UUID.randomUUID());
-    String token = jwtService.sign(user).token();
+    String token = jwtService.sign(user);
 
     UserDetails wrongUser = org.springframework.security.core.userdetails.User.builder()
             .username("other@test.com")

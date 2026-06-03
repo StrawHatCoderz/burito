@@ -1,7 +1,6 @@
 package com.burito.filter;
 
 import com.burito.service.JWTService;
-import com.burito.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -14,8 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -24,14 +21,13 @@ import static org.mockito.Mockito.*;
 class JwtAuthenticationFilterTest {
 
   @Mock private JWTService jwtService;
-  @Mock private UserService userService;
   @Mock private FilterChain filterChain;
 
   private JwtAuthenticationFilter filter;
 
   @BeforeEach
   void setUp() {
-    filter = new JwtAuthenticationFilter(jwtService, userService);
+    filter = new JwtAuthenticationFilter(jwtService);
     SecurityContextHolder.clearContext();
   }
 
@@ -48,7 +44,7 @@ class JwtAuthenticationFilterTest {
     filter.doFilter(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
-    verifyNoInteractions(jwtService, userService);
+    verifyNoInteractions(jwtService);
   }
 
   @Test
@@ -60,7 +56,7 @@ class JwtAuthenticationFilterTest {
     filter.doFilter(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
-    verifyNoInteractions(jwtService, userService);
+    verifyNoInteractions(jwtService);
   }
 
   @Test
@@ -69,15 +65,8 @@ class JwtAuthenticationFilterTest {
     request.addHeader("Authorization", "Bearer valid.jwt.token");
     var response = new MockHttpServletResponse();
 
-    UserDetails userDetails = User.builder()
-            .username("wade@test.com")
-            .password("hash")
-            .roles("USER")
-            .build();
-
     when(jwtService.extractUsername("valid.jwt.token")).thenReturn("wade@test.com");
-    when(userService.loadUserByUsername("wade@test.com")).thenReturn(userDetails);
-    when(jwtService.isValidToken("valid.jwt.token", userDetails)).thenReturn(true);
+    when(jwtService.extractRole("valid.jwt.token")).thenReturn("USER");
 
     filter.doFilter(request, response, filterChain);
 
@@ -85,28 +74,6 @@ class JwtAuthenticationFilterTest {
     assertNotNull(SecurityContextHolder.getContext().getAuthentication());
     assertEquals("wade@test.com",
             SecurityContextHolder.getContext().getAuthentication().getName());
-  }
-
-  @Test
-  void shouldContinueChainWithoutAuthWhenTokenIsInvalid() throws Exception {
-    var request = new MockHttpServletRequest();
-    request.addHeader("Authorization", "Bearer bad.token");
-    var response = new MockHttpServletResponse();
-
-    UserDetails userDetails = User.builder()
-            .username("wade@test.com")
-            .password("hash")
-            .roles("USER")
-            .build();
-
-    when(jwtService.extractUsername("bad.token")).thenReturn("wade@test.com");
-    when(userService.loadUserByUsername("wade@test.com")).thenReturn(userDetails);
-    when(jwtService.isValidToken("bad.token", userDetails)).thenReturn(false);
-
-    filter.doFilter(request, response, filterChain);
-
-    verify(filterChain).doFilter(request, response);
-    assertNull(SecurityContextHolder.getContext().getAuthentication());
   }
 
   @Test
@@ -120,7 +87,7 @@ class JwtAuthenticationFilterTest {
     filter.doFilter(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
-    verifyNoInteractions(userService);
+    assertNull(SecurityContextHolder.getContext().getAuthentication());
   }
 
   @Test

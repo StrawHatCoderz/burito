@@ -1,7 +1,6 @@
 package com.burito.filter;
 
 import com.burito.service.JWTService;
-import com.burito.service.UserService;
 import com.burito.utils.Parser;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -12,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,16 +20,14 @@ import java.io.IOException;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JWTService jwtService;
-  private final UserService userService;
 
-  public JwtAuthenticationFilter(JWTService jwtService, UserService userService) {
+  public JwtAuthenticationFilter(JWTService jwtService) {
     this.jwtService = jwtService;
-    this.userService = userService;
   }
 
   @Override
   protected void doFilterInternal(
-          HttpServletRequest request,
+          @NonNull HttpServletRequest request,
           @NonNull HttpServletResponse response,
           @NonNull FilterChain filterChain) throws ServletException, IOException {
     final String authHeader = request.getHeader("Authorization");
@@ -43,18 +41,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       String username = jwtService.extractUsername(token);
 
       if (username != null) {
-        UserDetails userDetails = userService.loadUserByUsername(username);
-        if (jwtService.isValidToken(token, userDetails)) {
-          UsernamePasswordAuthenticationToken authenticationToken =
-                  new UsernamePasswordAuthenticationToken(userDetails, null,
-                          userDetails.getAuthorities());
-          authenticationToken.setDetails(new WebAuthenticationDetailsSource()
-                  .buildDetails(request)
-          );
-
-          SecurityContextHolder.getContext()
-                  .setAuthentication(authenticationToken);
-        }
+        String role = jwtService.extractRole(token);
+        UserDetails userDetails = User.withUsername(username)
+                .password("")
+                .roles(role != null ? role : "USER")
+                .build();
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null,
+                        userDetails.getAuthorities());
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
       }
 
       filterChain.doFilter(request, response);

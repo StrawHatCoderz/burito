@@ -1,6 +1,5 @@
 package com.burito.service;
 
-import com.burito.controller.views.JWTToken;
 import com.burito.domain.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -15,28 +14,31 @@ import java.util.Date;
 
 @Service
 public class JWTService {
+  public static final double ACCESS_TOKEN_EXPIRY_MINS = 60.0;
+
   private final SecretKey key;
 
   public JWTService(@Value("${jwt.secret}") String secret) {
     this.key = Keys.hmacShaKeyFor(secret.getBytes());
   }
 
-  public JWTToken sign(User user) {
-    double expiresInMins = 60.0;
-    String token = Jwts.builder()
+  public String sign(User user) {
+    return Jwts.builder()
             .setSubject(user.getEmail())
             .claim("userId", user.getUserId() != null ? user.getUserId().toString() : null)
             .claim("role", "USER")
             .setIssuedAt(new Date())
-            .setExpiration(new Date((long) (System.currentTimeMillis() + 1000 * expiresInMins * 60)))
+            .setExpiration(new Date((long) (System.currentTimeMillis() + 1000 * ACCESS_TOKEN_EXPIRY_MINS * 60)))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
-
-    return new JWTToken(token, expiresInMins);
   }
 
   public String extractUsername(String token) {
     return getClaims(token).getSubject();
+  }
+
+  public String extractRole(String token) {
+    return (String) getClaims(token).get("role");
   }
 
   private Claims getClaims(String token) {

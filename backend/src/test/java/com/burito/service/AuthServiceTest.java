@@ -2,9 +2,11 @@ package com.burito.service;
 
 import com.burito.controller.views.JWTToken;
 import com.burito.controller.views.UserCreationView;
+import com.burito.domain.RefreshToken;
 import com.burito.domain.User;
 import com.burito.exceptions.EmailAlreadyExistsException;
 import com.burito.exceptions.InvalidCredentialsException;
+import com.burito.exceptions.InvalidRefreshTokenException;
 import com.burito.repository.UserRepo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,6 +32,7 @@ class AuthServiceTest {
   @Mock private PasswordEncoder passwordEncoder;
   @Mock private AuthenticationManager authenticationManager;
   @Mock private JWTService jwtService;
+  @Mock private RefreshTokenService refreshTokenService;
 
   @InjectMocks
   private AuthService authService;
@@ -106,15 +110,18 @@ class AuthServiceTest {
   @Test
   void shouldReturnJwtTokenOnValidLogin() throws Exception {
     User user = new User("Deadpool", "deadpool@test.com", "hash");
-    JWTToken token = new JWTToken("signed.jwt.token", 60.0);
+    RefreshToken refreshToken = buildRefreshToken(user, "refresh-token-uuid");
 
     when(userRepo.findUserByEmail("deadpool@test.com")).thenReturn(user);
-    when(jwtService.sign(user)).thenReturn(token);
+    when(jwtService.sign(user)).thenReturn("signed.access.token");
+    when(refreshTokenService.create(user)).thenReturn(refreshToken);
 
     JWTToken result = authService.login("deadpool@test.com", "loveyou3000");
 
     verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-    assertEquals("signed.jwt.token", result.token());
+    assertEquals("signed.access.token", result.accessToken());
+    assertEquals("refresh-token-uuid", result.refreshToken());
+    assertEquals(JWTService.ACCESS_TOKEN_EXPIRY_MINS, result.expiresInMins());
   }
 
   @Test
@@ -126,6 +133,43 @@ class AuthServiceTest {
             () -> authService.login("deadpool@test.com", "wrongpassword"));
   }
 
+  // --- refresh ---
+
+  @Test
+  void shouldReturnNewTokensOnValidRefreshToken() throws Exception {
+    User user = new User("Deadpool", "deadpool@test.com", "hash");
+    RefreshToken existing = buildRefreshToken(user, "old-refresh-token");
+    RefreshToken rotated = buildRefreshToken(user, "new-refresh-token");
+
+    when(refreshTokenService.validate("old-refresh-token")).thenReturn(existing);
+    when(jwtService.sign(user)).thenReturn("new.access.token");
+    when(refreshTokenService.create(user)).thenReturn(rotated);
+
+    JWTToken result = authService.refresh("old-refresh-token");
+
+    verify(refreshTokenService).revoke("old-refresh-token");
+    assertEquals("new.access.token", result.accessToken());
+    assertEquals("new-refresh-token", result.refreshToken());
+  }
+
+  @Test
+  void shouldThrowOnInvalidRefreshToken() throws Exception {
+    when(refreshTokenService.validate("bad-token"))
+            .thenThrow(new InvalidRefreshTokenException("Refresh token not found"));
+
+    assertThrows(InvalidRefreshTokenException.class,
+            () -> authService.refresh("bad-token"));
+  }
+
+  // --- logout ---
+
+  @Test
+  void shouldRevokeRefreshTokenOnLogout() {
+    authService.logout("some-refresh-token");
+
+    verify(refreshTokenService).revoke("some-refresh-token");
+  }
+
   // --- getCurrentUser ---
 
   @Test
@@ -133,8 +177,14 @@ class AuthServiceTest {
     User user = new User("Deadpool", "deadpool@test.com", "hash");
     when(userRepo.findUserByEmail("deadpool@test.com")).thenReturn(user);
 
-    User result = authService.getCurrentUser("deadpool@test.com");
+    assertEquals(user, authService.getCurrentUser("deadpool@test.com"));
+  }
 
-    assertEquals(user, result);
+  private RefreshToken buildRefreshToken(User user, String tokenStr) {
+    RefreshToken token = new RefreshToken();
+    token.setToken(tokenStr);
+    token.setUser(user);
+    token.setExpiresAt(LocalDateTime.now().plusDays(7));
+    return token;
   }
 }
