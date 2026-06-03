@@ -1,9 +1,5 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <h1 className="text-3xl font-bold text-gray-800">Burito</h1>
-    </div>
-  )
-}
+import { Router } from './app/Router'
+
+const App = () => <Router />
 
 export default App
