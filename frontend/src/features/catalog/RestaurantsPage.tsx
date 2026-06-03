@@ -6,9 +6,20 @@ import CardActionArea from '@mui/material/CardActionArea'
 import CardContent from '@mui/material/CardContent'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
+import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { fetchRestaurants } from './catalogApi'
+import { useDebounce } from '../../shared/hooks/useDebounce'
 import type { Restaurant } from './types'
+
+const CUISINES = [
+  'AMERICAN', 'CHINESE', 'INDIAN', 'ITALIAN', 'JAPANESE',
+  'KOREAN', 'LEBANESE', 'MEDITERRANEAN', 'MEXICAN', 'SOUTH_INDIAN', 'THAI',
+]
 
 type Status = 'loading' | 'success' | 'error'
 
@@ -16,15 +27,22 @@ export const RestaurantsPage = () => {
   const navigate = useNavigate()
   const [status, setStatus] = useState<Status>('loading')
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [searchInput, setSearchInput] = useState('')
+  const [cuisineFilter, setCuisineFilter] = useState('')
+  const searchDebounced = useDebounce(searchInput, 300)
 
   useEffect(() => {
-    fetchRestaurants()
+    setStatus('loading')
+    fetchRestaurants({
+      search: searchDebounced || undefined,
+      cuisine: cuisineFilter || undefined,
+    })
       .then((data) => {
         setRestaurants(data)
         setStatus('success')
       })
       .catch(() => setStatus('error'))
-  }, [])
+  }, [searchDebounced, cuisineFilter])
 
   if (status === 'loading') {
     return (
@@ -48,8 +66,33 @@ export const RestaurantsPage = () => {
         Restaurants
       </Typography>
 
+      <div className="flex flex-col gap-3 mb-6 sm:flex-row">
+        <TextField
+          label="Search restaurants"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          size="small"
+          fullWidth
+        />
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel>Cuisine</InputLabel>
+          <Select
+            value={cuisineFilter}
+            label="Cuisine"
+            onChange={(e) => setCuisineFilter(e.target.value)}
+          >
+            <MenuItem value="">All cuisines</MenuItem>
+            {CUISINES.map((c) => (
+              <MenuItem key={c} value={c}>
+                {c.replace(/_/g, ' ')}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </div>
+
       {restaurants.length === 0 ? (
-        <Typography color="text.secondary">No restaurants available right now</Typography>
+        <Typography color="text.secondary">No restaurants found</Typography>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {restaurants.map((r) => (
