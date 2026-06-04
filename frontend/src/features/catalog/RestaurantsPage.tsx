@@ -44,22 +44,6 @@ export const RestaurantsPage = () => {
       .catch(() => setStatus('error'))
   }, [searchDebounced, cuisineFilter])
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <CircularProgress />
-      </div>
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Alert severity="error">Failed to load restaurants. Please try again.</Alert>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <Typography variant="h4" component="h1" gutterBottom fontWeight={700}>
@@ -91,9 +75,21 @@ export const RestaurantsPage = () => {
         </FormControl>
       </div>
 
-      {restaurants.length === 0 ? (
+      {status === 'loading' && (
+        <div className="flex justify-center py-12">
+          <CircularProgress />
+        </div>
+      )}
+
+      {status === 'error' && (
+        <Alert severity="error">Failed to load restaurants. Please try again.</Alert>
+      )}
+
+      {status === 'success' && restaurants.length === 0 && (
         <Typography color="text.secondary">No restaurants found</Typography>
-      ) : (
+      )}
+
+      {status === 'success' && restaurants.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {restaurants.map((r) => (
             <Card key={r.restaurantId}>
