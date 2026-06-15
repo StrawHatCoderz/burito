@@ -40,7 +40,7 @@ public class RestaurantController {
       @ApiResponse(responseCode = "400", description = "cuisine value is not a valid CuisineType — errorCode: INVALID_CUISINE_TYPE",
           content = @Content(schema = @Schema(implementation = ApiError.class)))
   })
-  @GetMapping("/")
+  @GetMapping({"", "/"})
   public ResponseEntity<APIResponse<List<Restaurant>>> serveAllRestaurant(
       @Parameter(description = "Case-insensitive name filter") @RequestParam(required = false) String search,
       @Parameter(description = "Cuisine type filter — must match a CuisineType enum value") @RequestParam(required = false) String cuisine)

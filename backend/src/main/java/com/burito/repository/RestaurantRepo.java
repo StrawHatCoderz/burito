@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface RestaurantRepo extends JpaRepository<Restaurant, UUID> {
 
   @Query("SELECT r FROM Restaurant r WHERE " +
-         "(:name IS NULL OR LOWER(r.restaurantName) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+         "(:name IS NULL OR LOWER(r.restaurantName) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) AND " +
          "(:cuisine IS NULL OR r.cuisineType = :cuisine)")
   List<Restaurant> search(@Param("name") String name, @Param("cuisine") CuisineType cuisine);
 }

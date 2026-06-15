@@ -25,7 +25,9 @@ public class Security {
                     auth.requestMatchers(
                                     "/api/auth/**",
                                     "/api/health",
+                                    "/api/restaurants",
                                     "/api/restaurants/**",
+                                    "/error",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
                                     "/v3/api-docs/**"
