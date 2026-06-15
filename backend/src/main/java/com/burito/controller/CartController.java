@@ -1,0 +1,55 @@
+package com.burito.controller;
+
+import com.burito.controller.views.APIResponse;
+import com.burito.controller.views.ApiError;
+import com.burito.controller.views.CartItemRequest;
+import com.burito.controller.views.CartView;
+import com.burito.domain.User;
+import com.burito.exceptions.APIException;
+import com.burito.service.AuthService;
+import com.burito.service.CartService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = "Cart", description = "Cart management endpoints — authentication required")
+@RestController
+@RequestMapping("/api/cart")
+public class CartController {
+
+  private final CartService cartService;
+  private final AuthService authService;
+
+  public CartController(CartService cartService, AuthService authService) {
+    this.cartService = cartService;
+    this.authService = authService;
+  }
+
+  @Operation(summary = "Add an item to the cart", security = @SecurityRequirement(name = "bearerAuth"))
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Item added successfully, returning updated cart"),
+      @ApiResponse(responseCode = "400", description = "Menu item not found or unavailable",
+          content = @Content(schema = @Schema(implementation = ApiError.class))),
+      @ApiResponse(responseCode = "401", description = "Missing or invalid Bearer token",
+          content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
+  @PostMapping("/items")
+  public ResponseEntity<APIResponse<CartView>> addItem(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestBody CartItemRequest request) throws APIException {
+    User user = authService.getCurrentUser(userDetails.getUsername());
+    CartView cartView = cartService.addItem(user.getUserId(), request.menuItemId(), request.quantity());
+    return ResponseEntity.ok(APIResponse.success(cartView));
+  }
+}
