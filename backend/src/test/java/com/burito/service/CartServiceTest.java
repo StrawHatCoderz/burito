@@ -4,6 +4,7 @@ import com.burito.controller.views.CartView;
 import com.burito.domain.*;
 import com.burito.enums.CuisineType;
 import com.burito.enums.MenuCategory;
+import com.burito.enums.CartStatus;
 import com.burito.exceptions.MenuItemNotFoundException;
 import com.burito.exceptions.MenuItemUnavailableException;
 import com.burito.repository.CartItemRepo;
@@ -83,7 +84,7 @@ class CartServiceTest {
     void shouldAddItemToNewCart() throws Exception {
         when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(cartRepo.findByUser_UserId(userId)).thenReturn(Optional.empty());
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
 
         Cart expectedCart = new Cart(user, restaurantA);
         expectedCart.setCartId(UUID.randomUUID());
@@ -92,7 +93,7 @@ class CartServiceTest {
         CartItem expectedItem = new CartItem(expectedCart, menuItemA, 2, menuItemA.getPrice());
         when(cartItemRepo.findByCart_CartId(expectedCart.getCartId())).thenReturn(List.of(expectedItem));
 
-        CartView result = cartService.addItem(userId, menuItemIdA, 2);
+        CartView result = cartService.addItem(userId, null, menuItemIdA, 2);
 
         assertNotNull(result);
         assertEquals(expectedCart.getCartId(), result.cartId());
@@ -115,13 +116,13 @@ class CartServiceTest {
 
         when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(cartRepo.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
         when(cartItemRepo.findByCartAndMenuItem(cart, menuItemA)).thenReturn(Optional.of(existingItem));
 
         when(cartRepo.save(any(Cart.class))).thenReturn(cart);
         when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(List.of(existingItem));
 
-        CartView result = cartService.addItem(userId, menuItemIdA, 3);
+        CartView result = cartService.addItem(userId, null, menuItemIdA, 3);
 
         assertNotNull(result);
         assertEquals(5, existingItem.getQuantity());
@@ -137,14 +138,14 @@ class CartServiceTest {
 
         when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(cartRepo.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
         when(cartItemRepo.findByCartAndMenuItem(cart, menuItemA)).thenReturn(Optional.empty());
 
         when(cartRepo.save(any(Cart.class))).thenReturn(cart);
         CartItem newItem = new CartItem(cart, menuItemA, 1, menuItemA.getPrice());
         when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(List.of(newItem));
 
-        CartView result = cartService.addItem(userId, menuItemIdA, 1);
+        CartView result = cartService.addItem(userId, null, menuItemIdA, 1);
 
         assertNotNull(result);
         assertEquals(1, result.items().size());
@@ -160,13 +161,13 @@ class CartServiceTest {
 
         when(menuItemRepo.findById(menuItemIdB)).thenReturn(Optional.of(menuItemB));
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(cartRepo.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
         when(cartRepo.save(any(Cart.class))).thenReturn(cart);
 
         CartItem newItem = new CartItem(cart, menuItemB, 1, menuItemB.getPrice());
         when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(List.of(newItem));
 
-        CartView result = cartService.addItem(userId, menuItemIdB, 1);
+        CartView result = cartService.addItem(userId, null, menuItemIdB, 1);
 
         assertNotNull(result);
         assertEquals(restaurantB.getRestaurantId(), result.restaurantId());
@@ -182,7 +183,7 @@ class CartServiceTest {
     void shouldThrowMenuItemNotFoundExceptionWhenMenuItemDoesNotExist() {
         when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.empty());
 
-        assertThrows(MenuItemNotFoundException.class, () -> cartService.addItem(userId, menuItemIdA, 1));
+        assertThrows(MenuItemNotFoundException.class, () -> cartService.addItem(userId, null, menuItemIdA, 1));
     }
 
     @Test
@@ -190,6 +191,6 @@ class CartServiceTest {
         menuItemA.setAvailable(false);
         when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
 
-        assertThrows(MenuItemUnavailableException.class, () -> cartService.addItem(userId, menuItemIdA, 1));
+        assertThrows(MenuItemUnavailableException.class, () -> cartService.addItem(userId, null, menuItemIdA, 1));
     }
 }

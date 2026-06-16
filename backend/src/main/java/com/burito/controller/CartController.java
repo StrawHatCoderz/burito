@@ -22,6 +22,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.HttpStatus;
+
+import java.util.UUID;
 
 @Tag(name = "Cart", description = "Cart management endpoints — authentication required")
 @RestController
@@ -47,9 +52,54 @@ public class CartController {
   @PostMapping("/items")
   public ResponseEntity<APIResponse<CartView>> addItem(
       @AuthenticationPrincipal UserDetails userDetails,
+      @RequestHeader(value = "X-Guest-Id", required = false) UUID guestId,
       @RequestBody CartItemRequest request) throws APIException {
-    User user = authService.getCurrentUser(userDetails.getUsername());
-    CartView cartView = cartService.addItem(user.getUserId(), request.menuItemId(), request.quantity());
+
+    UUID userId = null;
+    if (userDetails != null) {
+      User user = authService.getCurrentUser(userDetails.getUsername());
+      userId = user.getUserId();
+    }
+
+    if (userId == null && guestId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    CartView cartView = cartService.addItem(userId, guestId, request.menuItemId(), request.quantity());
     return ResponseEntity.ok(APIResponse.success(cartView));
+  }
+
+  @Operation(summary = "View current cart", security = @SecurityRequirement(name = "bearerAuth"))
+  @GetMapping
+  public ResponseEntity<APIResponse<CartView>> getCart(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestHeader(value = "X-Guest-Id", required = false) UUID guestId) throws APIException {
+
+    UUID userId = null;
+    if (userDetails != null) {
+      User user = authService.getCurrentUser(userDetails.getUsername());
+      userId = user.getUserId();
+    }
+
+    if (userId == null && guestId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    CartView cartView = cartService.getCart(userId, guestId);
+    return ResponseEntity.ok(APIResponse.success(cartView));
+  }
+
+  @Operation(summary = "Merge guest cart", security = @SecurityRequirement(name = "bearerAuth"))
+  @PostMapping("/merge")
+  public ResponseEntity<APIResponse<Void>> mergeCart(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestHeader(value = "X-Guest-Id", required = true) UUID guestId) throws APIException {
+
+    if (userDetails == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    User user = authService.getCurrentUser(userDetails.getUsername());
+    cartService.mergeCart(user.getUserId(), guestId);
+    return ResponseEntity.ok(APIResponse.success(null));
   }
 }

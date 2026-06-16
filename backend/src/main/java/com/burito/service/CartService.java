@@ -4,6 +4,7 @@ import com.burito.controller.views.CartItemView;
 import com.burito.controller.views.CartView;
 import com.burito.domain.Cart;
 import com.burito.domain.CartItem;
+import com.burito.enums.CartStatus;
 import com.burito.domain.MenuItem;
 import com.burito.domain.User;
 import com.burito.exceptions.MenuItemNotFoundException;
@@ -39,20 +40,20 @@ public class CartService {
     }
 
     /**
-     * Adds a menu item to the user's cart.
+     * Adds a menu item to the user's cart or guest's cart.
      * Handles cart creation, item quantity updates, cross-restaurant cart resets,
      * and automatic recomputation of cart totals.
      */
     @Transactional
-    public CartView addItem(UUID userId, UUID menuItemId, int quantity)
+    public CartView addItem(UUID userId, UUID guestId, UUID menuItemId, int quantity)
             throws MenuItemNotFoundException, MenuItemUnavailableException {
         MenuItem menuItem = getValidatedMenuItem(menuItemId);
-        User user = getUser(userId);
+        User user = userId != null ? getUser(userId) : null;
 
-        Cart cart = cartRepo.findByUser_UserId(userId).orElse(null);
+        Cart cart = getCartEntity(userId, guestId);
 
         if (cart == null) {
-            cart = createCartWithItem(user, menuItem, quantity);
+            cart = createCartWithItem(user, guestId, menuItem, quantity);
         } else if (isDifferentRestaurant(cart, menuItem)) {
             cart = resetCartWithItem(cart, menuItem, quantity);
         } else {
@@ -65,6 +66,40 @@ public class CartService {
 
         List<CartItem> finalItems = cartItemRepo.findByCart_CartId(cart.getCartId());
         return mapToCartView(cart, finalItems);
+    }
+
+    @Transactional(readOnly = true)
+    public CartView getCart(UUID userId, UUID guestId) {
+        Cart cart = getCartEntity(userId, guestId);
+        if (cart == null) {
+            return new CartView(null, null, List.of(), BigDecimal.ZERO);
+        }
+        List<CartItem> items = cartItemRepo.findByCart_CartId(cart.getCartId());
+        return mapToCartView(cart, items);
+    }
+
+    @Transactional
+    public void mergeCart(UUID userId, UUID guestId) {
+        if (userId == null || guestId == null) {
+            return;
+        }
+        Cart guestCart = cartRepo.findByGuestIdAndStatus(guestId, CartStatus.PENDING).orElse(null);
+        if (guestCart == null) {
+            return;
+        }
+
+        Cart userCart = cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING).orElse(null);
+        if (userCart != null) {
+            // User already has a cart, discard guest cart by marking it expired
+            guestCart.setStatus(CartStatus.EXPIRED);
+            cartRepo.save(guestCart);
+        } else {
+            // Re-assign guest cart to user
+            User user = getUser(userId);
+            guestCart.setUser(user);
+            guestCart.setGuestId(null);
+            cartRepo.save(guestCart);
+        }
     }
 
     private MenuItem getValidatedMenuItem(UUID menuItemId)
@@ -84,14 +119,28 @@ public class CartService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
     }
 
+    private Cart getCartEntity(UUID userId, UUID guestId) {
+        if (userId != null) {
+            return cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING).orElse(null);
+        } else if (guestId != null) {
+            return cartRepo.findByGuestIdAndStatus(guestId, CartStatus.PENDING).orElse(null);
+        }
+        throw new IllegalArgumentException("Either userId or guestId must be provided");
+    }
+
     private boolean isDifferentRestaurant(Cart cart, MenuItem menuItem) {
         UUID cartRestaurantId = cart.getRestaurant().getRestaurantId();
         UUID itemRestaurantId = menuItem.getRestaurant().getRestaurantId();
         return !cartRestaurantId.equals(itemRestaurantId);
     }
 
-    private Cart createCartWithItem(User user, MenuItem menuItem, int quantity) {
-        Cart cart = new Cart(user, menuItem.getRestaurant());
+    private Cart createCartWithItem(User user, UUID guestId, MenuItem menuItem, int quantity) {
+        Cart cart;
+        if (user != null) {
+            cart = new Cart(user, menuItem.getRestaurant());
+        } else {
+            cart = new Cart(guestId, menuItem.getRestaurant());
+        }
         cart = cartRepo.save(cart);
 
         CartItem newItem = new CartItem(cart, menuItem, quantity, menuItem.getPrice());

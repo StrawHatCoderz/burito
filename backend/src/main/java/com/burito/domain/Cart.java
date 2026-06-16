@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.burito.enums.CartStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,12 +25,19 @@ public class Cart {
     private UUID cartId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
+
+    @Column(name = "guest_id", unique = true)
+    private UUID guestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CartStatus status = CartStatus.PENDING;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
@@ -45,5 +54,13 @@ public class Cart {
         this.user = user;
         this.restaurant = restaurant;
         this.total = BigDecimal.ZERO;
+        this.status = CartStatus.PENDING;
+    }
+
+    public Cart(UUID guestId, Restaurant restaurant) {
+        this.guestId = guestId;
+        this.restaurant = restaurant;
+        this.total = BigDecimal.ZERO;
+        this.status = CartStatus.PENDING;
     }
 }

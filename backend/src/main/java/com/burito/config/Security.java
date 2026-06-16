@@ -27,6 +27,7 @@ public class Security {
                                     "/api/health",
                                     "/api/restaurants",
                                     "/api/restaurants/**",
+                                    "/api/cart/**",
                                     "/error",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
