@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import './index.css'
 import App from './App.tsx'
+import { CartProvider } from './features/cart/CartContext'
 
 const theme = createTheme()
 
@@ -11,7 +12,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+      <CartProvider>
+        <App />
+      </CartProvider>
     </ThemeProvider>
   </StrictMode>,
 )
