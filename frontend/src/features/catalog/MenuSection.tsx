@@ -4,8 +4,9 @@ import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
 import { useCart } from '../cart/CartContext'
-import { addToCart } from '../cart/cartApi'
+import { addToCart, removeCartItem, decrementCartItem } from '../cart/cartApi'
 import { Toast } from '../../shared/ui/Toast'
+import { QuantityStepper } from '../../shared/ui/QuantityStepper'
 import type { MenuItem } from './types'
 
 interface MenuSectionProps {
@@ -21,66 +22,74 @@ interface AddToCartButtonProps {
   onError: (message: string) => void
 }
 
-const AddToCartButton = ({ item, onError }: AddToCartButtonProps) => {
-  const { optimisticAdd, syncFromBackend, rollback } = useCart()
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
+const CartInteraction = ({ item, onError }: AddToCartButtonProps) => {
+  const { cart, optimisticAdd, optimisticDecrement, optimisticRemove, syncFromBackend, rollback } = useCart()
+  const [status, setStatus] = useState<'idle' | 'loading'>('idle')
 
-  const handleClick = async () => {
+  const cartItem = cart.items.find(i => i.menuItemId === item.menuItemId)
+
+  const handleAdd = async () => {
     if (status !== 'idle') return
     
-    // 1. Optimistic local update
     optimisticAdd(item)
     setStatus('loading')
 
     try {
-      // 2. API call
       const cartView = await addToCart(item.menuItemId, 1)
-      
-      // 3. Backend reconciliation
       syncFromBackend(cartView)
-      setStatus('success')
-      
-      // Reset button state after 1.5s
-      setTimeout(() => setStatus('idle'), 1500)
+      setStatus('idle')
     } catch (e) {
-      // 4. Rollback on failure
       rollback()
       setStatus('idle')
       onError('Failed to add item. Please try again.')
     }
   }
 
-  if (status === 'success') {
+  const handleDecrement = async () => {
+    if (!cartItem || status !== 'idle') return
+    
+    setStatus('loading')
+    try {
+      if (cartItem.quantity > 1) {
+        optimisticDecrement(cartItem.cartItemId)
+        const cartView = await decrementCartItem(cartItem.cartItemId)
+        syncFromBackend(cartView)
+      } else {
+        optimisticRemove(cartItem.cartItemId)
+        const cartView = await removeCartItem(cartItem.cartItemId)
+        syncFromBackend(cartView)
+      }
+      setStatus('idle')
+    } catch (e) {
+      rollback()
+      setStatus('idle')
+      onError('Failed to remove item. Please try again.')
+    }
+  }
+
+  if (cartItem) {
     return (
-      <Button
-        variant="contained"
-        disabled
-        sx={{
-          borderRadius: '9999px',
-          bgcolor: '#10B981 !important', // Emerald Green
-          color: '#fff !important',
-          fontWeight: 600,
-          textTransform: 'none',
-          minWidth: '90px'
-        }}
-      >
-        Added ✓
-      </Button>
+      <QuantityStepper
+        quantity={cartItem.quantity}
+        onIncrement={handleAdd}
+        onDecrement={handleDecrement}
+        isLoading={status === 'loading'}
+      />
     )
   }
 
   return (
     <Button
       variant="contained"
-      onClick={handleClick}
+      onClick={handleAdd}
       disabled={status === 'loading'}
       sx={{
         borderRadius: '9999px',
-        bgcolor: '#FF5A5F', // Tomato/Coral
+        bgcolor: '#FF5A5F',
         color: '#fff',
         fontWeight: 600,
         textTransform: 'none',
-        minWidth: '90px',
+        minWidth: '100px',
         '&:hover': {
           bgcolor: '#E03C31',
           transform: 'translateY(-1px)',
@@ -133,7 +142,7 @@ export const MenuSection = ({ category, items }: MenuSectionProps) => {
               <Typography variant="body1" fontWeight={600}>
                 ₹{item.price.toFixed(2)}
               </Typography>
-              {item.available && <AddToCartButton item={item} onError={handleError} />}
+              {item.available && <CartInteraction item={item} onError={handleError} />}
             </div>
           </div>
         ))}

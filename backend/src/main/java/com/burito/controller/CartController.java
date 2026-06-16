@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -123,6 +124,27 @@ public class CartController {
     }
 
     CartView cartView = cartService.removeItem(userId, guestId, cartItemId);
+    return ResponseEntity.ok(APIResponse.success(cartView));
+  }
+
+  @Operation(summary = "Decrement item quantity", security = @SecurityRequirement(name = "bearerAuth"))
+  @PutMapping("/items/{cartItemId}/decrement")
+  public ResponseEntity<APIResponse<CartView>> decrementItem(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestHeader(value = "X-Guest-Id", required = false) UUID guestId,
+      @PathVariable UUID cartItemId) throws APIException {
+
+    UUID userId = null;
+    if (userDetails != null) {
+      User user = authService.getCurrentUser(userDetails.getUsername());
+      userId = user.getUserId();
+    }
+
+    if (userId == null && guestId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    CartView cartView = cartService.decrementItem(userId, guestId, cartItemId);
     return ResponseEntity.ok(APIResponse.success(cartView));
   }
 

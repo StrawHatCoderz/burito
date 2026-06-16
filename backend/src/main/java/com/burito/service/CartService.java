@@ -106,6 +106,29 @@ public class CartService {
     }
 
     @Transactional
+    public CartView decrementItem(UUID userId, UUID guestId, UUID cartItemId) throws CartItemNotFoundException {
+        Cart cart = getCartEntity(userId, guestId);
+        if (cart == null) {
+            throw new CartItemNotFoundException(cartItemId);
+        }
+
+        CartItem item = cartItemRepo.findById(cartItemId)
+                .filter(i -> i.getCart().getCartId().equals(cart.getCartId()))
+                .orElseThrow(() -> new CartItemNotFoundException(cartItemId));
+
+        if (item.getQuantity() > 1) {
+            item.setQuantity(item.getQuantity() - 1);
+            cartItemRepo.save(item);
+            cartItemRepo.flush();
+            cart.setTotal(calculateCartTotal(cart.getCartId()));
+            cartRepo.save(cart);
+            return mapToCartView(cart, cartItemRepo.findByCart_CartId(cart.getCartId()));
+        } else {
+            return removeItem(userId, guestId, cartItemId);
+        }
+    }
+
+    @Transactional
     public CartView clearCart(UUID userId, UUID guestId) {
         Cart cart = getCartEntity(userId, guestId);
         if (cart == null) {

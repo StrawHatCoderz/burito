@@ -5,14 +5,80 @@ import IconButton from '@mui/material/IconButton'
 import Button from '@mui/material/Button'
 import Tooltip from '@mui/material/Tooltip'
 import Skeleton from '@mui/material/Skeleton'
-import { TrashIcon } from '../../shared/ui/icons/TrashIcon'
+import { QuantityStepper } from '../../shared/ui/QuantityStepper'
 import { useCart } from './CartContext'
-import { removeCartItem, clearCart } from './cartApi'
+import { addToCart, removeCartItem, decrementCartItem, clearCart } from './cartApi'
 import client from '../../shared/api/client'
 import { Toast } from '../../shared/ui/Toast'
 
+const CartItemRow = ({ item, onError }: { item: any; onError: (msg: string) => void }) => {
+  const { optimisticAdd, optimisticDecrement, optimisticRemove, syncFromBackend, rollback } = useCart()
+  const [status, setStatus] = useState<'idle' | 'loading'>('idle')
+
+  const handleAdd = async () => {
+    if (status !== 'idle') return
+    optimisticAdd({ menuItemId: item.menuItemId, name: item.name, price: item.unitPrice } as any)
+    setStatus('loading')
+    try {
+      const cartView = await addToCart(item.menuItemId, 1)
+      syncFromBackend(cartView)
+      setStatus('idle')
+    } catch (e) {
+      rollback()
+      setStatus('idle')
+      onError('Failed to add item.')
+    }
+  }
+
+  const handleDecrement = async () => {
+    if (status !== 'idle') return
+    setStatus('loading')
+    try {
+      if (item.quantity > 1) {
+        optimisticDecrement(item.cartItemId)
+        const cartView = await decrementCartItem(item.cartItemId)
+        syncFromBackend(cartView)
+      } else {
+        optimisticRemove(item.cartItemId)
+        const cartView = await removeCartItem(item.cartItemId)
+        syncFromBackend(cartView)
+      }
+      setStatus('idle')
+    } catch (e) {
+      rollback()
+      setStatus('idle')
+      onError('Failed to remove item.')
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3 p-4 bg-white rounded-xl border border-gray-100 shadow-sm transition-all">
+      <div className="flex justify-between items-start gap-2">
+        <Typography variant="body1" fontWeight={600} className="flex-1 leading-snug">
+          {item.name}
+        </Typography>
+        <Typography variant="body1" fontWeight={700}>
+          ₹{item.subtotal.toFixed(2)}
+        </Typography>
+      </div>
+      <div className="flex justify-between items-center">
+        <Typography variant="body2" color="textSecondary" fontWeight={500}>
+          ₹{item.unitPrice.toFixed(2)} / each
+        </Typography>
+        <QuantityStepper
+          size="small"
+          quantity={item.quantity}
+          onIncrement={handleAdd}
+          onDecrement={handleDecrement}
+          isLoading={status === 'loading'}
+        />
+      </div>
+    </div>
+  )
+}
+
 export const CartDrawer = () => {
-  const { cart, isCartOpen, closeCartDrawer, optimisticRemove, optimisticClear, syncFromBackend, rollback } = useCart()
+  const { cart, isCartOpen, closeCartDrawer, optimisticClear, syncFromBackend, rollback } = useCart()
   const [restaurantName, setRestaurantName] = useState<string | null>(null)
   const [loadingName, setLoadingName] = useState(false)
   const [errorToast, setErrorToast] = useState({ open: false, message: '' })
@@ -38,17 +104,6 @@ export const CartDrawer = () => {
       setRestaurantName(null)
     }
   }, [cart.items.length])
-
-  const handleRemove = async (cartItemId: string) => {
-    optimisticRemove(cartItemId)
-    try {
-      const response = await removeCartItem(cartItemId)
-      syncFromBackend(response)
-    } catch (e) {
-      rollback()
-      showError('Failed to remove item.')
-    }
-  }
 
   const handleClear = async () => {
     optimisticClear()
@@ -132,24 +187,7 @@ export const CartDrawer = () => {
               ) : null}
 
               {cart.items.map(item => (
-                <div key={item.cartItemId} className="flex flex-col gap-2 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <Typography variant="body1" fontWeight={600} className="flex-1">
-                      {item.quantity}x {item.name}
-                    </Typography>
-                    <Typography variant="body1" fontWeight={600}>
-                      ₹{item.subtotal.toFixed(2)}
-                    </Typography>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <Typography variant="body2" color="textSecondary">
-                      ₹{item.unitPrice.toFixed(2)} each
-                    </Typography>
-                    <IconButton size="small" onClick={() => handleRemove(item.cartItemId)} aria-label="Remove item" sx={{ color: '#9CA3AF', '&:hover': { color: '#EF4444' }}}>
-                      <TrashIcon width="20" height="20" />
-                    </IconButton>
-                  </div>
-                </div>
+                <CartItemRow key={item.cartItemId} item={item} onError={showError} />
               ))}
             </>
           )}

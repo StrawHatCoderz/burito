@@ -13,6 +13,11 @@ export const addToCart = async (
   return data.data!
 }
 
+export const decrementCartItem = async (cartItemId: string): Promise<CartView> => {
+  const { data } = await client.put<ApiResponse<CartView>>(`/cart/items/${cartItemId}/decrement`)
+  return data.data!
+}
+
 export const removeCartItem = async (cartItemId: string): Promise<CartView> => {
   const { data } = await client.delete<ApiResponse<CartView>>(`/cart/items/${cartItemId}`)
   return data.data!

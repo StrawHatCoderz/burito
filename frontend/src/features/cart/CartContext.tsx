@@ -18,6 +18,7 @@ interface CartContextValue {
   openCartDrawer: () => void
   closeCartDrawer: () => void
   optimisticAdd: (menuItem: MenuItem) => void
+  optimisticDecrement: (cartItemId: string) => void
   optimisticRemove: (cartItemId: string) => void
   optimisticClear: () => void
   syncFromBackend: (cartView: CartView) => void
@@ -101,6 +102,38 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     })
   }, [])
 
+  const optimisticDecrement = useCallback((cartItemId: string) => {
+    setCart((prev) => {
+      setSnapshot(prev)
+      const existingItemIndex = prev.items.findIndex(i => i.cartItemId === cartItemId)
+      if (existingItemIndex < 0) return prev
+
+      const item = prev.items[existingItemIndex]
+      const newItems = [...prev.items]
+
+      if (item.quantity > 1) {
+        newItems[existingItemIndex] = {
+          ...item,
+          quantity: item.quantity - 1,
+          subtotal: item.subtotal - item.unitPrice,
+        }
+        return {
+          ...prev,
+          items: newItems,
+          total: prev.total - item.unitPrice,
+          cartItemCount: prev.cartItemCount - 1,
+        }
+      } else {
+        return {
+          ...prev,
+          items: newItems.filter(i => i.cartItemId !== cartItemId),
+          total: prev.total - item.subtotal,
+          cartItemCount: prev.cartItemCount - 1,
+        }
+      }
+    })
+  }, [])
+
   const optimisticRemove = useCallback((cartItemId: string) => {
     setCart((prev) => {
       setSnapshot(prev)
@@ -150,6 +183,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         openCartDrawer,
         closeCartDrawer,
         optimisticAdd,
+        optimisticDecrement,
         optimisticRemove,
         optimisticClear,
         syncFromBackend,
