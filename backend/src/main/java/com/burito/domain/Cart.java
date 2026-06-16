@@ -25,10 +25,10 @@ public class Cart {
     private UUID cartId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "guest_id", unique = true)
+    @Column(name = "guest_id")
     private UUID guestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
