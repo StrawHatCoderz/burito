@@ -10,3 +10,8 @@ memory/
 # Frontend build artifacts and dependencies
 frontend/dist/
 frontend/node_modules/
+
+# Backend build artifacts
+backend/bin/
+backend/build/
+.gradle/
