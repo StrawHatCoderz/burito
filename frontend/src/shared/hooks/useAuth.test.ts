@@ -1,10 +1,21 @@
 import { renderHook, act } from '@testing-library/react'
 import { useAuth } from './useAuth'
+import { vi } from 'vitest'
+
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn((token: string) => {
+    if (token === 'invalid-token') throw new Error('Invalid token')
+    if (token === 'admin-token') return { role: 'ROLE_RESTAURANT_ADMIN', restaurantId: '123' }
+    if (token === 'customer-token') return { role: 'ROLE_CUSTOMER' }
+    return {}
+  })
+}))
 
 const TOKEN_KEY = 'burito_token'
 
 beforeEach(() => {
   localStorage.clear()
+  vi.clearAllMocks()
 })
 
 describe('useAuth', () => {
@@ -17,17 +28,18 @@ describe('useAuth', () => {
   it('is authenticated after login()', () => {
     const { result } = renderHook(() => useAuth())
     act(() => {
-      result.current.login('test-token')
+      result.current.login('customer-token')
     })
     expect(result.current.isAuthenticated).toBe(true)
-    expect(result.current.token).toBe('test-token')
-    expect(localStorage.getItem(TOKEN_KEY)).toBe('test-token')
+    expect(result.current.token).toBe('customer-token')
+    expect(localStorage.getItem(TOKEN_KEY)).toBe('customer-token')
+    expect(result.current.role).toBe('ROLE_CUSTOMER')
   })
 
   it('is not authenticated after logout()', () => {
     const { result } = renderHook(() => useAuth())
     act(() => {
-      result.current.login('test-token')
+      result.current.login('customer-token')
     })
     act(() => {
       result.current.logout()
@@ -37,18 +49,41 @@ describe('useAuth', () => {
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull()
   })
 
-  it('reads existing token from localStorage on mount', () => {
-    localStorage.setItem(TOKEN_KEY, 'existing-token')
+  it('reads existing token from localStorage on mount and decodes it', () => {
+    localStorage.setItem(TOKEN_KEY, 'admin-token')
     const { result } = renderHook(() => useAuth())
     expect(result.current.isAuthenticated).toBe(true)
-    expect(result.current.token).toBe('existing-token')
+    expect(result.current.token).toBe('admin-token')
+    expect(result.current.role).toBe('ROLE_RESTAURANT_ADMIN')
+    expect(result.current.restaurantId).toBe('123')
   })
 
-  it('is not authenticated when login() is called with empty string', () => {
+  it('login() as admin succeeds with correct role', () => {
     const { result } = renderHook(() => useAuth())
     act(() => {
-      result.current.login('')
+      result.current.login('admin-token', true)
     })
+    expect(result.current.isAuthenticated).toBe(true)
+    expect(result.current.role).toBe('ROLE_RESTAURANT_ADMIN')
+  })
+
+  it('login() as admin fails with incorrect role', () => {
+    const { result } = renderHook(() => useAuth())
+    expect(() => {
+      act(() => {
+        result.current.login('customer-token', true)
+      })
+    }).toThrow('Unauthorized: Admin role required')
+    expect(result.current.isAuthenticated).toBe(false)
+  })
+
+  it('login() throws when token is invalid', () => {
+    const { result } = renderHook(() => useAuth())
+    expect(() => {
+      act(() => {
+        result.current.login('invalid-token')
+      })
+    }).toThrow()
     expect(result.current.isAuthenticated).toBe(false)
   })
 

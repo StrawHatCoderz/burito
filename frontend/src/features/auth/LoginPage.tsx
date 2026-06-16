@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import InputAdornment from '@mui/material/InputAdornment'
-import client from '../../shared/api/client'
+import * as authApi from '../../shared/api/authApi'
 import { useAuth } from '../../shared/hooks/useAuth'
 import { extractErrorMessage } from '../../shared/api/types'
 
@@ -23,7 +23,7 @@ export const LoginPage = () => {
     setIsSubmitting(true)
 
     try {
-      const { data: responseBody } = await client.post('/auth/login', { email, password })
+      const responseBody = await authApi.login({ email, password })
       login(responseBody.data.accessToken)
       navigate('/restaurants')
     } catch (error) {

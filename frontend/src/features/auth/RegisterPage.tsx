@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
-import client from '../../shared/api/client'
+import * as authApi from '../../shared/api/authApi'
 import { extractErrorMessage } from '../../shared/api/types'
 
 export const RegisterPage = () => {
@@ -20,7 +20,7 @@ export const RegisterPage = () => {
     setIsSubmitting(true)
 
     try {
-      await client.post('/auth/register', {
+      await authApi.register({
         full_name: fullName,
         email,
         password,
