@@ -31,9 +31,9 @@ describe('AdminLoginPage', () => {
         <AdminLoginPage />
       </MemoryRouter>
     )
-    expect(screen.getByRole('heading', { name: /Restaurant Admin Login/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Sign In/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument()
   })
 
   it('handles successful login', async () => {
@@ -46,7 +46,7 @@ describe('AdminLoginPage', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'admin@test.com' } })
-    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText(/^Password/i), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: /Sign In/i }))
 
     await waitFor(() => {
@@ -66,7 +66,7 @@ describe('AdminLoginPage', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'admin@test.com' } })
-    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'wrongpass' } })
+    fireEvent.change(screen.getByLabelText(/^Password/i), { target: { value: 'wrongpass' } })
     fireEvent.click(screen.getByRole('button', { name: /Sign In/i }))
 
     expect(await screen.findByText('Invalid credentials')).toBeInTheDocument()

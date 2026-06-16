@@ -26,7 +26,7 @@ describe('AdminRegisterPage', () => {
         <AdminRegisterPage />
       </MemoryRouter>
     )
-    expect(screen.getByRole('heading', { name: /Restaurant Admin Registration/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Create an account/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/Full Name/i)).toBeInTheDocument()
   })
 
@@ -49,7 +49,7 @@ describe('AdminRegisterPage', () => {
     const option = await screen.findByRole('option', { name: 'Italian' })
     fireEvent.click(option)
 
-    fireEvent.change(screen.getByLabelText(/Estimated Delivery Minutes/i), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText(/Est. Delivery \(Mins\)/i), { target: { value: '30' } })
     
     fireEvent.click(screen.getByRole('button', { name: /Register Restaurant/i }))
 
@@ -79,7 +79,7 @@ describe('AdminRegisterPage', () => {
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'admin@test.com' } })
     fireEvent.change(screen.getByLabelText(/^Password/i), { target: { value: 'password123' } })
     fireEvent.change(screen.getByLabelText(/Restaurant Name/i), { target: { value: 'My Resto' } })
-    fireEvent.change(screen.getByLabelText(/Estimated Delivery Minutes/i), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText(/Est. Delivery \(Mins\)/i), { target: { value: '30' } })
     
     // Select is not strictly required to be changed for a mocked submit if we bypass it, but it has a default of '' which might fail HTML5 validation.
     // Let's submit the form directly.

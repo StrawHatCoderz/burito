@@ -1,5 +1,46 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --color-bg-primary: #FFF9F5;
+  --color-bg-surface: #FFFFFF;
+  --color-text-primary: #2D2327;
+  --color-text-muted: #8C7C83;
+  --color-accent: #D34A24;
+  --color-accent-subtle: #FDF2EE;
+  --color-border: #EBE3DE;
+
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  --animate-sizzle: sizzle 3s ease-in-out infinite alternate;
+
+  @keyframes sizzle {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+}
+
 body {
   margin: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  
+  .thermal-sizzle {
+    background: linear-gradient(-45deg, var(--color-accent-subtle), #FFE6DE, var(--color-bg-primary));
+    background-size: 400% 400%;
+    animation: sizzle 3s ease-in-out infinite alternate;
+  }
 }

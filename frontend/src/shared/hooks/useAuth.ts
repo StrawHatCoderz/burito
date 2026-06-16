@@ -23,7 +23,7 @@ export function useAuth() {
   const login = useCallback((newToken: string, isAdminLogin: boolean = false) => {
     try {
       const decoded = jwtDecode<any>(newToken)
-      if (isAdminLogin && decoded.role !== 'ROLE_RESTAURANT_ADMIN') {
+      if (isAdminLogin && decoded.role !== 'RESTAURANT_ADMIN') {
         throw new Error('Unauthorized: Admin role required')
       }
       localStorage.setItem(TOKEN_KEY, newToken)

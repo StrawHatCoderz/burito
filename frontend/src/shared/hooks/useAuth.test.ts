@@ -5,7 +5,7 @@ import { vi } from 'vitest'
 vi.mock('jwt-decode', () => ({
   jwtDecode: vi.fn((token: string) => {
     if (token === 'invalid-token') throw new Error('Invalid token')
-    if (token === 'admin-token') return { role: 'ROLE_RESTAURANT_ADMIN', restaurantId: '123' }
+    if (token === 'admin-token') return { role: 'RESTAURANT_ADMIN', restaurantId: '123' }
     if (token === 'customer-token') return { role: 'ROLE_CUSTOMER' }
     return {}
   })
@@ -54,7 +54,7 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth())
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.token).toBe('admin-token')
-    expect(result.current.role).toBe('ROLE_RESTAURANT_ADMIN')
+    expect(result.current.role).toBe('RESTAURANT_ADMIN')
     expect(result.current.restaurantId).toBe('123')
   })
 
@@ -64,7 +64,7 @@ describe('useAuth', () => {
       result.current.login('admin-token', true)
     })
     expect(result.current.isAuthenticated).toBe(true)
-    expect(result.current.role).toBe('ROLE_RESTAURANT_ADMIN')
+    expect(result.current.role).toBe('RESTAURANT_ADMIN')
   })
 
   it('login() as admin fails with incorrect role', () => {

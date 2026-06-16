@@ -5,8 +5,10 @@ import Typography from '@mui/material/Typography'
 import InputBase from '@mui/material/InputBase'
 import IconButton from '@mui/material/IconButton'
 import Paper from '@mui/material/Paper'
+import { PromoCarousel } from './PromoCarousel'
 import { fetchRestaurants } from './catalogApi'
 import { useDebounce } from '../../shared/hooks/useDebounce'
+import { useAuth } from '../../shared/hooks/useAuth'
 import type { Restaurant } from './types'
 
 const CUISINES = [
@@ -43,11 +45,26 @@ type Status = 'loading' | 'success' | 'error'
 
 export const RestaurantsPage = () => {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [status, setStatus] = useState<Status>('loading')
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [searchInput, setSearchInput] = useState('')
   const [cuisineFilter, setCuisineFilter] = useState('')
   const searchDebounced = useDebounce(searchInput, 300)
+
+  let userName = ''
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (payload.full_name) {
+        userName = payload.full_name.split(' ')[0]
+      } else if (payload.email) {
+        userName = payload.email.split('@')[0]
+      }
+    } catch(e) {}
+  }
+
+  const greeting = userName ? `Hungry, ${userName}? 👋` : 'Hungry? 👋'
 
   useEffect(() => {
     setStatus('loading')
@@ -63,42 +80,42 @@ export const RestaurantsPage = () => {
   }, [searchDebounced, cuisineFilter])
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-8">
+    <div className="min-h-screen bg-[#FFF9F5] p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         
-        {/* Hero Section */}
-        <div className="relative w-full rounded-3xl bg-gradient-to-br from-[#FF5A5F] to-[#E03C31] text-white p-8 md:p-12 mb-8 overflow-hidden shadow-lg">
-          {/* Abstract background shapes */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10"></div>
-          <div className="absolute bottom-0 left-10 -mb-10 w-32 h-32 rounded-full bg-white opacity-10"></div>
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <Typography variant="h4" component="h1" fontWeight={800} color="textPrimary" sx={{ letterSpacing: '-0.02em' }}>
+              {greeting}
+            </Typography>
+            <Typography variant="body1" color="textSecondary" sx={{ mt: 0.5, fontWeight: 500 }}>
+              Let's find something delicious for you.
+            </Typography>
+          </div>
           
-          <div className="relative z-10 max-w-2xl">
-            <Typography variant="h3" component="h1" fontWeight={800} gutterBottom sx={{ letterSpacing: '-0.02em', fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
-              What are you craving?
-            </Typography>
-            <Typography variant="h6" className="opacity-90 mb-8 font-light max-w-lg">
-              Discover the best local restaurants delivering hot and fresh to your doorstep.
-            </Typography>
-
+          <div className="w-full md:w-[400px]">
             <Paper
               component="form"
-              sx={{ p: '4px 8px', display: 'flex', alignItems: 'center', width: '100%', maxWidth: 500, borderRadius: '9999px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)' }}
+              sx={{ p: '2px 8px', display: 'flex', alignItems: 'center', width: '100%', borderRadius: '9999px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', border: '1px solid #e5e7eb', transition: 'box-shadow 0.2s', '&:focus-within': { boxShadow: '0 0 0 2px #FF5A5F33, 0 4px 6px -1px rgba(0, 0, 0, 0.05)' } }}
               onSubmit={(e) => e.preventDefault()}
             >
               <IconButton sx={{ p: '10px' }} aria-label="search" disabled>
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" className="text-gray-400">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" className="text-gray-400">
                   <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
               </IconButton>
               <InputBase
-                sx={{ ml: 1, flex: 1, fontSize: '1.1rem' }}
-                placeholder="Search for restaurants..."
+                sx={{ ml: 1, flex: 1, fontSize: '1rem' }}
+                placeholder="Search restaurants, cuisines..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </Paper>
           </div>
         </div>
+
+        <PromoCarousel />
 
         {/* Cuisine Pills Navigation */}
         <div className="mb-8 overflow-x-auto pb-4 hide-scrollbar">

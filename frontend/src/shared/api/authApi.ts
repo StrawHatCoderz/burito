@@ -6,12 +6,12 @@ export const login = async (credentials: any) => {
 };
 
 export const adminLogin = async (credentials: any) => {
-  const { data } = await client.post('/admin/login', credentials);
+  const { data } = await client.post('/admin/auth/login', credentials);
   return data;
 };
 
 export const adminRegister = async (payload: any) => {
-  const { data } = await client.post('/admin/register', payload);
+  const { data } = await client.post('/admin/auth/register', payload);
   return data;
 };
 
