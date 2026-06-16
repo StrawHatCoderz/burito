@@ -38,6 +38,8 @@ public class Restaurant {
   @Column(name = "owner_id")
   private UUID ownerId;
 
+  private String imageUrl;
+
   public Restaurant(UUID restaurantId, String restaurantName,
                     CuisineType cuisineType,
                     double rating,
