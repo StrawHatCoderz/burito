@@ -77,13 +77,13 @@ class CartControllerTest {
     }
 
     @Test
-    void shouldReturn403WhenAnonymousUserAddsToCart() throws Exception {
+    void shouldReturn401WhenMissingBothAuthAndGuestId() throws Exception {
         CartItemRequest request = new CartItemRequest(UUID.randomUUID(), 1);
 
         mockMvc.perform(post("/api/cart/items")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -206,9 +206,10 @@ class CartControllerTest {
                 .orElseThrow(() -> new IllegalStateException("Seeded menu item Samosa (2 pcs) not found"));
 
         MenuItem itemB = menuItemRepo.findAll().stream()
-                .filter(i -> i.getName().equals("Masala Dosa"))
+                .filter(i -> i.getRestaurant().getRestaurantId().equals(itemA.getRestaurant().getRestaurantId())
+                             && !i.getMenuItemId().equals(itemA.getMenuItemId()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Seeded menu item Masala Dosa not found"));
+                .orElseThrow(() -> new IllegalStateException("Second menu item from same restaurant not found"));
 
         CartItemRequest requestA = new CartItemRequest(itemA.getMenuItemId(), 2);
         CartItemRequest requestB = new CartItemRequest(itemB.getMenuItemId(), 1);

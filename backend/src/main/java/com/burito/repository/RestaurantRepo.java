@@ -17,4 +17,6 @@ public interface RestaurantRepo extends JpaRepository<Restaurant, UUID> {
          "(:name IS NULL OR LOWER(r.restaurantName) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) AND " +
          "(:cuisine IS NULL OR r.cuisineType = :cuisine)")
   List<Restaurant> search(@Param("name") String name, @Param("cuisine") CuisineType cuisine);
+
+  Restaurant findByOwnerId(UUID ownerId);
 }

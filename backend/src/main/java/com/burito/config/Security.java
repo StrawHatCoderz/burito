@@ -24,6 +24,7 @@ public class Security {
             .authorizeHttpRequests(auth ->
                     auth.requestMatchers(
                                     "/api/auth/**",
+                                    "/api/admin/auth/**",
                                     "/api/health",
                                     "/api/restaurants",
                                     "/api/restaurants/**",
@@ -33,6 +34,7 @@ public class Security {
                                     "/swagger-ui.html",
                                     "/v3/api-docs/**"
                             ).permitAll()
+                            .requestMatchers("/api/admin/**").hasAuthority("ROLE_RESTAURANT_ADMIN")
                             .anyRequest()
                             .authenticated()
             )

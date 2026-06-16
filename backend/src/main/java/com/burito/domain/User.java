@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.jspecify.annotations.Nullable;
 
+import com.burito.enums.Role;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,6 +31,10 @@ public class User {
   @Column
   private String fullName;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Role role = Role.USER;
+
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -39,5 +44,13 @@ public class User {
     this.fullName = fullName;
     this.email = email;
     this.hashPassword = hashPassword;
+    this.role = Role.USER;
+  }
+
+  public User(String fullName, String email, @Nullable String hashPassword, Role role) {
+    this.fullName = fullName;
+    this.email = email;
+    this.hashPassword = hashPassword;
+    this.role = role != null ? role : Role.USER;
   }
 }

@@ -3,10 +3,14 @@ package com.burito.service;
 import com.burito.controller.views.JWTToken;
 import com.burito.controller.views.UserCreationView;
 import com.burito.domain.RefreshToken;
+import com.burito.domain.Restaurant;
 import com.burito.domain.User;
+import com.burito.enums.CuisineType;
+import com.burito.enums.Role;
 import com.burito.exceptions.EmailAlreadyExistsException;
 import com.burito.exceptions.InvalidCredentialsException;
 import com.burito.exceptions.InvalidRefreshTokenException;
+import com.burito.repository.RestaurantRepo;
 import com.burito.repository.UserRepo;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,17 +24,20 @@ public class AuthService {
   private final AuthenticationManager authenticationManager;
   private final JWTService jwtService;
   private final RefreshTokenService refreshTokenService;
+  private final RestaurantRepo restaurantRepo;
 
   public AuthService(UserRepo userRepo,
                      PasswordEncoder passwordEncoder,
                      AuthenticationManager authenticationManager,
                      JWTService jwtService,
-                     RefreshTokenService refreshTokenService) {
+                     RefreshTokenService refreshTokenService,
+                     RestaurantRepo restaurantRepo) {
     this.userRepo = userRepo;
     this.passwordEncoder = passwordEncoder;
     this.authenticationManager = authenticationManager;
     this.jwtService = jwtService;
     this.refreshTokenService = refreshTokenService;
+    this.restaurantRepo = restaurantRepo;
   }
 
   public UserCreationView register(String fullName, String email, String password)
@@ -52,7 +59,41 @@ public class AuthService {
       throw new InvalidCredentialsException("Password should be greater than 8 characters");
     }
 
-    User user = userRepo.save(new User(fullName, email, passwordEncoder.encode(password)));
+    User user = userRepo.save(new User(fullName, email, passwordEncoder.encode(password), Role.USER));
+
+    return new UserCreationView(user.getUserId(), user.getEmail());
+  }
+
+  public UserCreationView registerAdmin(String fullName, String email, String password,
+                                        String restaurantName, CuisineType cuisineType, double estDeliveryMinutes)
+          throws InvalidCredentialsException, EmailAlreadyExistsException {
+
+    if (fullName == null || fullName.isEmpty()) {
+      throw new InvalidCredentialsException("Full name cannot be empty");
+    }
+
+    if (!isValidEmail(email)) {
+      throw new InvalidCredentialsException("Invalid email");
+    }
+
+    if (userRepo.findUserByEmail(email) != null) {
+      throw new EmailAlreadyExistsException();
+    }
+
+    if (!isValidPassword(password)) {
+      throw new InvalidCredentialsException("Password should be greater than 8 characters");
+    }
+
+    User user = userRepo.save(new User(fullName, email, passwordEncoder.encode(password), Role.RESTAURANT_ADMIN));
+    
+    Restaurant r = new Restaurant();
+    r.setOwnerId(user.getUserId());
+    r.setRestaurantName(restaurantName != null ? restaurantName : fullName + "'s Restaurant");
+    r.setCuisineType(cuisineType != null ? cuisineType : CuisineType.AMERICAN); // Default
+    r.setRating(0.0);
+    r.setEstDeliveryMinutes(estDeliveryMinutes > 0 ? estDeliveryMinutes : 30);
+    r.setOpen(false);
+    restaurantRepo.save(r);
 
     return new UserCreationView(user.getUserId(), user.getEmail());
   }
@@ -76,7 +117,14 @@ public class AuthService {
     }
 
     User user = userRepo.findUserByEmail(email);
-    String accessToken = jwtService.sign(user);
+    String restaurantId = null;
+    if (Role.RESTAURANT_ADMIN.equals(user.getRole())) {
+        Restaurant restaurant = restaurantRepo.findByOwnerId(user.getUserId());
+        if (restaurant != null && restaurant.getRestaurantId() != null) {
+            restaurantId = restaurant.getRestaurantId().toString();
+        }
+    }
+    String accessToken = jwtService.sign(user, restaurantId);
     RefreshToken refreshToken = refreshTokenService.create(user);
     return new JWTToken(accessToken, refreshToken.getToken(), JWTService.ACCESS_TOKEN_EXPIRY_MINS);
   }
@@ -85,7 +133,15 @@ public class AuthService {
     RefreshToken existing = refreshTokenService.validate(refreshTokenStr);
     User user = existing.getUser();
     refreshTokenService.revoke(refreshTokenStr);
-    String accessToken = jwtService.sign(user);
+    
+    String restaurantId = null;
+    if (Role.RESTAURANT_ADMIN.equals(user.getRole())) {
+        Restaurant restaurant = restaurantRepo.findByOwnerId(user.getUserId());
+        if (restaurant != null && restaurant.getRestaurantId() != null) {
+            restaurantId = restaurant.getRestaurantId().toString();
+        }
+    }
+    String accessToken = jwtService.sign(user, restaurantId);
     RefreshToken newRefreshToken = refreshTokenService.create(user);
     return new JWTToken(accessToken, newRefreshToken.getToken(), JWTService.ACCESS_TOKEN_EXPIRY_MINS);
   }

@@ -113,7 +113,7 @@ class AuthServiceTest {
     RefreshToken refreshToken = buildRefreshToken(user, "refresh-token-uuid");
 
     when(userRepo.findUserByEmail("deadpool@test.com")).thenReturn(user);
-    when(jwtService.sign(user)).thenReturn("signed.access.token");
+    when(jwtService.sign(user, null)).thenReturn("signed.access.token");
     when(refreshTokenService.create(user)).thenReturn(refreshToken);
 
     JWTToken result = authService.login("deadpool@test.com", "loveyou3000");
@@ -142,7 +142,7 @@ class AuthServiceTest {
     RefreshToken rotated = buildRefreshToken(user, "new-refresh-token");
 
     when(refreshTokenService.validate("old-refresh-token")).thenReturn(existing);
-    when(jwtService.sign(user)).thenReturn("new.access.token");
+    when(jwtService.sign(user, null)).thenReturn("new.access.token");
     when(refreshTokenService.create(user)).thenReturn(rotated);
 
     JWTToken result = authService.refresh("old-refresh-token");

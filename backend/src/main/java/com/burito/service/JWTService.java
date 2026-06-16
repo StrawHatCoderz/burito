@@ -23,14 +23,23 @@ public class JWTService {
   }
 
   public String sign(User user) {
-    return Jwts.builder()
+    return sign(user, null);
+  }
+
+  public String sign(User user, String restaurantId) {
+    io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
             .setSubject(user.getEmail())
             .claim("userId", user.getUserId() != null ? user.getUserId().toString() : null)
-            .claim("role", "USER")
+            .claim("role", user.getRole() != null ? user.getRole().name() : "USER")
             .setIssuedAt(new Date())
             .setExpiration(new Date((long) (System.currentTimeMillis() + 1000 * ACCESS_TOKEN_EXPIRY_MINS * 60)))
-            .signWith(key, SignatureAlgorithm.HS256)
-            .compact();
+            .signWith(key, SignatureAlgorithm.HS256);
+            
+    if (restaurantId != null) {
+      builder.claim("restaurantId", restaurantId);
+    }
+    
+    return builder.compact();
   }
 
   public String extractUsername(String token) {

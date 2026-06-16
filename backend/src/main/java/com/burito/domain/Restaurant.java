@@ -35,11 +35,22 @@ public class Restaurant {
   @JoinColumn(name = "address_id")
   private Address address;
 
+  @Column(name = "owner_id")
+  private UUID ownerId;
+
   public Restaurant(UUID restaurantId, String restaurantName,
                     CuisineType cuisineType,
                     double rating,
                     double estDeliveryMinutes,
                     boolean isOpen, Address address) {
+    this(restaurantId, restaurantName, cuisineType, rating, estDeliveryMinutes, isOpen, address, null);
+  }
+
+  public Restaurant(UUID restaurantId, String restaurantName,
+                    CuisineType cuisineType,
+                    double rating,
+                    double estDeliveryMinutes,
+                    boolean isOpen, Address address, UUID ownerId) {
     this.restaurantId = restaurantId;
     this.restaurantName = restaurantName;
     this.cuisineType = cuisineType;
@@ -47,5 +58,6 @@ public class Restaurant {
     this.estDeliveryMinutes = estDeliveryMinutes;
     this.isOpen = isOpen;
     this.address = address;
+    this.ownerId = ownerId;
   }
 }
