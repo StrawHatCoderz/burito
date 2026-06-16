@@ -14,7 +14,12 @@ const initialState: CartState = {
 
 interface CartContextValue {
   cart: CartState
+  isCartOpen: boolean
+  openCartDrawer: () => void
+  closeCartDrawer: () => void
   optimisticAdd: (menuItem: MenuItem) => void
+  optimisticRemove: (cartItemId: string) => void
+  optimisticClear: () => void
   syncFromBackend: (cartView: CartView) => void
   rollback: () => void
   refreshCart: () => Promise<void>
@@ -31,6 +36,10 @@ export const useCart = () => {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartState>(initialState)
   const [snapshot, setSnapshot] = useState<CartState | null>(null)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+
+  const openCartDrawer = useCallback(() => setIsCartOpen(true), [])
+  const closeCartDrawer = useCallback(() => setIsCartOpen(false), [])
 
   const syncFromBackend = useCallback((cartView: CartView) => {
     setCart({
@@ -92,6 +101,36 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     })
   }, [])
 
+  const optimisticRemove = useCallback((cartItemId: string) => {
+    setCart((prev) => {
+      setSnapshot(prev)
+      const existingItemIndex = prev.items.findIndex(i => i.cartItemId === cartItemId)
+      if (existingItemIndex < 0) return prev
+
+      const item = prev.items[existingItemIndex]
+      const newItems = prev.items.filter(i => i.cartItemId !== cartItemId)
+
+      return {
+        ...prev,
+        items: newItems,
+        total: prev.total - item.subtotal,
+        cartItemCount: prev.cartItemCount - item.quantity,
+      }
+    })
+  }, [])
+
+  const optimisticClear = useCallback(() => {
+    setCart((prev) => {
+      setSnapshot(prev)
+      return {
+        ...prev,
+        items: [],
+        total: 0,
+        cartItemCount: 0,
+      }
+    })
+  }, [])
+
   const rollback = useCallback(() => {
     setCart((prev) => {
       if (snapshot) {
@@ -107,7 +146,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     <CartContext.Provider
       value={{
         cart,
+        isCartOpen,
+        openCartDrawer,
+        closeCartDrawer,
         optimisticAdd,
+        optimisticRemove,
+        optimisticClear,
         syncFromBackend,
         rollback,
         refreshCart,
