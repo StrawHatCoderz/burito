@@ -1,25 +1,43 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Alert from '@mui/material/Alert'
-import Card from '@mui/material/Card'
-import CardActionArea from '@mui/material/CardActionArea'
-import CardContent from '@mui/material/CardContent'
-import Chip from '@mui/material/Chip'
-import CircularProgress from '@mui/material/CircularProgress'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
-import TextField from '@mui/material/TextField'
+import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
+import InputBase from '@mui/material/InputBase'
+import IconButton from '@mui/material/IconButton'
+import Paper from '@mui/material/Paper'
 import { fetchRestaurants } from './catalogApi'
 import { useDebounce } from '../../shared/hooks/useDebounce'
 import type { Restaurant } from './types'
 
 const CUISINES = [
-  'AMERICAN', 'CHINESE', 'INDIAN', 'ITALIAN', 'JAPANESE',
-  'KOREAN', 'LEBANESE', 'MEDITERRANEAN', 'MEXICAN', 'SOUTH_INDIAN', 'THAI',
+  { id: '', label: 'All', icon: '🍽️' },
+  { id: 'AMERICAN', label: 'American', icon: '🍔' },
+  { id: 'CHINESE', label: 'Chinese', icon: '🍜' },
+  { id: 'INDIAN', label: 'Indian', icon: '🍛' },
+  { id: 'ITALIAN', label: 'Italian', icon: '🍕' },
+  { id: 'JAPANESE', label: 'Japanese', icon: '🍣' },
+  { id: 'KOREAN', label: 'Korean', icon: '🍱' },
+  { id: 'LEBANESE', label: 'Lebanese', icon: '🧆' },
+  { id: 'MEDITERRANEAN', label: 'Mediterranean', icon: '🥙' },
+  { id: 'MEXICAN', label: 'Mexican', icon: '🌮' },
+  { id: 'SOUTH_INDIAN', label: 'South Indian', icon: '🥞' },
+  { id: 'THAI', label: 'Thai', icon: '🥘' },
 ]
+
+const getGradientForCuisine = (cuisine: string) => {
+  const gradients: Record<string, string> = {
+    AMERICAN: 'from-blue-400 to-indigo-500',
+    CHINESE: 'from-red-400 to-red-600',
+    INDIAN: 'from-orange-400 to-orange-600',
+    ITALIAN: 'from-green-400 to-emerald-600',
+    JAPANESE: 'from-rose-400 to-pink-500',
+    KOREAN: 'from-purple-400 to-purple-600',
+    MEXICAN: 'from-yellow-400 to-orange-500',
+    SOUTH_INDIAN: 'from-amber-400 to-yellow-600',
+    THAI: 'from-lime-400 to-green-600',
+  }
+  return gradients[cuisine] || 'from-gray-400 to-gray-500'
+}
 
 type Status = 'loading' | 'success' | 'error'
 
@@ -45,80 +63,171 @@ export const RestaurantsPage = () => {
   }, [searchDebounced, cuisineFilter])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <Typography variant="h4" component="h1" gutterBottom fontWeight={700}>
-        Restaurants
-      </Typography>
+    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Hero Section */}
+        <div className="relative w-full rounded-3xl bg-gradient-to-br from-[#FF5A5F] to-[#E03C31] text-white p-8 md:p-12 mb-8 overflow-hidden shadow-lg">
+          {/* Abstract background shapes */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10"></div>
+          <div className="absolute bottom-0 left-10 -mb-10 w-32 h-32 rounded-full bg-white opacity-10"></div>
+          
+          <div className="relative z-10 max-w-2xl">
+            <Typography variant="h3" component="h1" fontWeight={800} gutterBottom sx={{ letterSpacing: '-0.02em', fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+              What are you craving?
+            </Typography>
+            <Typography variant="h6" className="opacity-90 mb-8 font-light max-w-lg">
+              Discover the best local restaurants delivering hot and fresh to your doorstep.
+            </Typography>
 
-      <div className="flex flex-col gap-3 mb-6 sm:flex-row">
-        <TextField
-          label="Search restaurants"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          size="small"
-          fullWidth
-        />
-        <FormControl size="small" sx={{ minWidth: 180 }}>
-          <InputLabel>Cuisine</InputLabel>
-          <Select
-            value={cuisineFilter}
-            label="Cuisine"
-            onChange={(e) => setCuisineFilter(e.target.value)}
-          >
-            <MenuItem value="">All cuisines</MenuItem>
-            {CUISINES.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c.replace(/_/g, ' ')}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </div>
-
-      {status === 'loading' && (
-        <div className="flex justify-center py-12">
-          <CircularProgress />
+            <Paper
+              component="form"
+              sx={{ p: '4px 8px', display: 'flex', alignItems: 'center', width: '100%', maxWidth: 500, borderRadius: '9999px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)' }}
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <IconButton sx={{ p: '10px' }} aria-label="search" disabled>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" className="text-gray-400">
+                  <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+              </IconButton>
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: '1.1rem' }}
+                placeholder="Search for restaurants..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </Paper>
+          </div>
         </div>
-      )}
 
-      {status === 'error' && (
-        <Alert severity="error">Failed to load restaurants. Please try again.</Alert>
-      )}
+        {/* Cuisine Pills Navigation */}
+        <div className="mb-8 overflow-x-auto pb-4 hide-scrollbar">
+          <div className="flex gap-3 px-1">
+            {CUISINES.map((c) => {
+              const isActive = cuisineFilter === c.id
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setCuisineFilter(c.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-[#FF5A5F] text-white shadow-md transform -translate-y-0.5' 
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300 shadow-sm'
+                  }`}
+                >
+                  <span className="text-lg">{c.icon}</span>
+                  {c.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
-      {status === 'success' && restaurants.length === 0 && (
-        <Typography color="text.secondary">No restaurants found</Typography>
-      )}
+        {/* Loading Skeletons */}
+        {status === 'loading' && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col h-[280px]">
+                <Skeleton variant="rectangular" height={128} animation="wave" />
+                <div className="p-5 flex flex-col flex-1">
+                  <Skeleton variant="text" height={32} width="70%" />
+                  <Skeleton variant="text" height={20} width="40%" className="mb-4" />
+                  <div className="mt-auto flex gap-4">
+                    <Skeleton variant="rounded" width={60} height={24} />
+                    <Skeleton variant="rounded" width={80} height={24} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-      {status === 'success' && restaurants.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {restaurants.map((r) => (
-            <Card key={r.restaurantId}>
-              <CardActionArea onClick={() => navigate(`/restaurants/${r.restaurantId}`)}>
-                <CardContent>
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <Typography variant="h6" component="h2" fontWeight={600} lineHeight={1.3}>
+        {/* Error State */}
+        {status === 'error' && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center text-red-500 mb-4">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+            </div>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Oops! Something went wrong.
+            </Typography>
+            <Typography variant="body1" color="textSecondary">
+              We couldn't load the restaurants. Please try refreshing the page.
+            </Typography>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {status === 'success' && restaurants.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <div className="text-6xl mb-4">🔍</div>
+            <Typography variant="h5" fontWeight={700} gutterBottom color="textPrimary">
+              No restaurants found
+            </Typography>
+            <Typography variant="body1" color="textSecondary" className="max-w-md">
+              We couldn't find any restaurants matching your current search or cuisine filters. Try adjusting them!
+            </Typography>
+            <button 
+              onClick={() => { setSearchInput(''); setCuisineFilter(''); }}
+              className="mt-6 px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-semibold transition-colors"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+
+        {/* Restaurant Grid */}
+        {status === 'success' && restaurants.length > 0 && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {restaurants.map((r) => (
+              <div 
+                key={r.restaurantId}
+                onClick={() => navigate(`/restaurants/${r.restaurantId}`)}
+                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col hover:-translate-y-1 h-full"
+              >
+                {/* Abstract Background Header */}
+                <div className={`h-32 w-full bg-gradient-to-br ${getGradientForCuisine(r.cuisineType)} relative overflow-hidden`}>
+                  {/* Subtle pattern overlay */}
+                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                  
+                  {/* Floating Delivery Time Badge */}
+                  <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-gray-800 shadow-sm flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" className="text-gray-500">
+                      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                    {r.estDeliveryMinutes} min
+                  </div>
+                  
+                  {/* Status Badge */}
+                  <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm backdrop-blur-sm ${r.open ? 'bg-white/95 text-emerald-600' : 'bg-gray-900/95 text-white'}`}>
+                    {r.open ? 'OPEN' : 'CLOSED'}
+                  </div>
+                </div>
+
+                {/* Card Content */}
+                <div className="p-5 flex flex-col flex-1">
+                  <div className="flex justify-between items-start gap-2 mb-1.5">
+                    <Typography variant="h6" component="h2" fontWeight={700} lineHeight={1.2} className="text-gray-900 group-hover:text-[#FF5A5F] transition-colors line-clamp-1">
                       {r.restaurantName}
                     </Typography>
-                    <Chip
-                      label={r.open ? 'Open' : 'Closed'}
-                      size="small"
-                      color={r.open ? 'success' : 'default'}
-                    />
+                    <div className="flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">
+                      <span className="text-emerald-700 text-sm font-bold">{r.rating.toFixed(1)}</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" className="text-emerald-500">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                      </svg>
+                    </div>
                   </div>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography variant="body2" color="textSecondary" className="mb-4 font-medium flex items-center gap-1.5">
                     {r.cuisineType.replace(/_/g, ' ')}
                   </Typography>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
-                    <span>★ {r.rating.toFixed(1)}</span>
-                    <span aria-hidden>·</span>
-                    <span>{r.estDeliveryMinutes} min</span>
-                  </div>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          ))}
-        </div>
-      )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
