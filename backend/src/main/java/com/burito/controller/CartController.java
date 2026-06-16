@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
@@ -101,5 +103,46 @@ public class CartController {
     User user = authService.getCurrentUser(userDetails.getUsername());
     cartService.mergeCart(user.getUserId(), guestId);
     return ResponseEntity.ok(APIResponse.success(null));
+  }
+
+  @Operation(summary = "Remove an item from the cart", security = @SecurityRequirement(name = "bearerAuth"))
+  @DeleteMapping("/items/{cartItemId}")
+  public ResponseEntity<APIResponse<CartView>> removeItem(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestHeader(value = "X-Guest-Id", required = false) UUID guestId,
+      @PathVariable UUID cartItemId) throws APIException {
+
+    UUID userId = null;
+    if (userDetails != null) {
+      User user = authService.getCurrentUser(userDetails.getUsername());
+      userId = user.getUserId();
+    }
+
+    if (userId == null && guestId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    CartView cartView = cartService.removeItem(userId, guestId, cartItemId);
+    return ResponseEntity.ok(APIResponse.success(cartView));
+  }
+
+  @Operation(summary = "Clear the entire cart", security = @SecurityRequirement(name = "bearerAuth"))
+  @DeleteMapping
+  public ResponseEntity<APIResponse<CartView>> clearCart(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestHeader(value = "X-Guest-Id", required = false) UUID guestId) throws APIException {
+
+    UUID userId = null;
+    if (userDetails != null) {
+      User user = authService.getCurrentUser(userDetails.getUsername());
+      userId = user.getUserId();
+    }
+
+    if (userId == null && guestId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    CartView cartView = cartService.clearCart(userId, guestId);
+    return ResponseEntity.ok(APIResponse.success(cartView));
   }
 }

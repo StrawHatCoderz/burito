@@ -26,6 +26,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -194,5 +195,75 @@ class CartControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.errorCode").value(ErrorCode.MENU_ITEM_UNAVAILABLE.name()))
                 .andExpect(jsonPath("$.error.message").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void shouldRemoveItemAndRecomputeTotal() throws Exception {
+        MenuItem itemA = menuItemRepo.findAll().stream()
+                .filter(i -> i.getName().equals("Samosa (2 pcs)"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Seeded menu item Samosa (2 pcs) not found"));
+
+        MenuItem itemB = menuItemRepo.findAll().stream()
+                .filter(i -> i.getName().equals("Masala Dosa"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Seeded menu item Masala Dosa not found"));
+
+        CartItemRequest requestA = new CartItemRequest(itemA.getMenuItemId(), 2);
+        CartItemRequest requestB = new CartItemRequest(itemB.getMenuItemId(), 1);
+
+        mockMvc.perform(post("/api/cart/items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestA)));
+
+        String cartResponse = mockMvc.perform(post("/api/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestB)))
+                .andReturn().getResponse().getContentAsString();
+
+        String cartItemIdA = objectMapper.readTree(cartResponse)
+                .get("data").get("items").get(0).get("cartItemId").asText(); // Depending on insertion order, maybe need to check name
+
+        mockMvc.perform(delete("/api/cart/items/" + cartItemIdA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(1));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void shouldClearCart() throws Exception {
+        MenuItem item = menuItemRepo.findAll().stream()
+                .filter(i -> i.getName().equals("Samosa (2 pcs)"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Seeded menu item Samosa (2 pcs) not found"));
+
+        CartItemRequest request = new CartItemRequest(item.getMenuItemId(), 2);
+
+        mockMvc.perform(post("/api/cart/items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
+
+        mockMvc.perform(delete("/api/cart"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(0))
+                .andExpect(jsonPath("$.data.total").value(0.00));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void shouldReturn404WhenRemovingNonExistentItem() throws Exception {
+        mockMvc.perform(delete("/api/cart/items/" + UUID.randomUUID()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.errorCode").value(ErrorCode.CART_ITEM_NOT_FOUND.name()));
+    }
+
+    @Test
+    void shouldReturn401WhenDeletingWithoutAuth() throws Exception {
+        mockMvc.perform(delete("/api/cart"))
+                .andExpect(status().isUnauthorized());
     }
 }

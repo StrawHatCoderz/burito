@@ -9,6 +9,7 @@ import com.burito.domain.MenuItem;
 import com.burito.domain.User;
 import com.burito.exceptions.MenuItemNotFoundException;
 import com.burito.exceptions.MenuItemUnavailableException;
+import com.burito.exceptions.CartItemNotFoundException;
 import com.burito.repository.CartItemRepo;
 import com.burito.repository.CartRepo;
 import com.burito.repository.MenuItemRepo;
@@ -76,6 +77,46 @@ public class CartService {
         }
         List<CartItem> items = cartItemRepo.findByCart_CartId(cart.getCartId());
         return mapToCartView(cart, items);
+    }
+
+    @Transactional
+    public CartView removeItem(UUID userId, UUID guestId, UUID cartItemId) throws CartItemNotFoundException {
+        Cart cart = getCartEntity(userId, guestId);
+        if (cart == null) {
+            throw new CartItemNotFoundException(cartItemId);
+        }
+
+        CartItem itemToRemove = cartItemRepo.findById(cartItemId)
+                .filter(item -> item.getCart().getCartId().equals(cart.getCartId()))
+                .orElseThrow(() -> new CartItemNotFoundException(cartItemId));
+
+        cartItemRepo.delete(itemToRemove);
+        cartItemRepo.flush();
+
+        List<CartItem> remainingItems = cartItemRepo.findByCart_CartId(cart.getCartId());
+        if (remainingItems.isEmpty()) {
+            cart.setStatus(CartStatus.EXPIRED);
+            cartRepo.save(cart);
+            return new CartView(null, null, List.of(), BigDecimal.ZERO);
+        }
+
+        cart.setTotal(calculateCartTotal(cart.getCartId()));
+        cartRepo.save(cart);
+        return mapToCartView(cart, remainingItems);
+    }
+
+    @Transactional
+    public CartView clearCart(UUID userId, UUID guestId) {
+        Cart cart = getCartEntity(userId, guestId);
+        if (cart == null) {
+            return new CartView(null, null, List.of(), BigDecimal.ZERO);
+        }
+
+        cartItemRepo.deleteByCart_CartId(cart.getCartId());
+        cart.setStatus(CartStatus.EXPIRED);
+        cartRepo.save(cart);
+
+        return new CartView(null, null, List.of(), BigDecimal.ZERO);
     }
 
     @Transactional

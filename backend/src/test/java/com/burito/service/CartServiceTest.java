@@ -7,6 +7,7 @@ import com.burito.enums.MenuCategory;
 import com.burito.enums.CartStatus;
 import com.burito.exceptions.MenuItemNotFoundException;
 import com.burito.exceptions.MenuItemUnavailableException;
+import com.burito.exceptions.CartItemNotFoundException;
 import com.burito.repository.CartItemRepo;
 import com.burito.repository.CartRepo;
 import com.burito.repository.MenuItemRepo;
@@ -192,5 +193,107 @@ class CartServiceTest {
         when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
 
         assertThrows(MenuItemUnavailableException.class, () -> cartService.addItem(userId, null, menuItemIdA, 1));
+    }
+
+    @Test
+    void shouldRemoveItemAndRecomputeTotal() throws Exception {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+        
+        CartItem itemA = new CartItem(cart, menuItemA, 2, menuItemA.getPrice());
+        itemA.setCartItemId(UUID.randomUUID());
+        
+        CartItem itemB = new CartItem(cart, menuItemB, 1, menuItemB.getPrice());
+        itemB.setCartItemId(UUID.randomUUID());
+        
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        when(cartItemRepo.findById(itemA.getCartItemId())).thenReturn(Optional.of(itemA));
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(List.of(itemB));
+        when(cartRepo.save(any(Cart.class))).thenReturn(cart);
+
+        CartView result = cartService.removeItem(userId, null, itemA.getCartItemId());
+        
+        assertNotNull(result);
+        assertEquals(1, result.items().size());
+        assertEquals("Item B", result.items().get(0).name());
+        assertEquals(new BigDecimal("15.00"), result.total());
+        
+        verify(cartItemRepo).delete(itemA);
+        verify(cartRepo).save(cart);
+    }
+
+    @Test
+    void shouldRemoveLastItemAndMarkCartExpired() throws Exception {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+        
+        CartItem itemA = new CartItem(cart, menuItemA, 2, menuItemA.getPrice());
+        itemA.setCartItemId(UUID.randomUUID());
+        
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        when(cartItemRepo.findById(itemA.getCartItemId())).thenReturn(Optional.of(itemA));
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(List.of()); // No remaining items
+        
+        CartView result = cartService.removeItem(userId, null, itemA.getCartItemId());
+        
+        assertNotNull(result);
+        assertTrue(result.items().isEmpty());
+        assertEquals(BigDecimal.ZERO, result.total());
+        assertEquals(CartStatus.EXPIRED, cart.getStatus());
+        
+        verify(cartItemRepo).delete(itemA);
+        verify(cartRepo).save(cart);
+    }
+
+    @Test
+    void shouldThrowCartItemNotFoundWhenCartDoesNotExist() {
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
+        assertThrows(CartItemNotFoundException.class, () -> cartService.removeItem(userId, null, UUID.randomUUID()));
+    }
+
+    @Test
+    void shouldThrowCartItemNotFoundWhenItemNotBelongToCart() {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+
+        Cart otherCart = new Cart(user, restaurantB);
+        otherCart.setCartId(UUID.randomUUID());
+
+        CartItem itemA = new CartItem(otherCart, menuItemA, 2, menuItemA.getPrice());
+        itemA.setCartItemId(UUID.randomUUID());
+        
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        when(cartItemRepo.findById(itemA.getCartItemId())).thenReturn(Optional.of(itemA));
+
+        assertThrows(CartItemNotFoundException.class, () -> cartService.removeItem(userId, null, itemA.getCartItemId()));
+    }
+
+    @Test
+    void shouldClearCart() {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+        
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        
+        CartView result = cartService.clearCart(userId, null);
+        
+        assertNotNull(result);
+        assertTrue(result.items().isEmpty());
+        assertEquals(BigDecimal.ZERO, result.total());
+        assertEquals(CartStatus.EXPIRED, cart.getStatus());
+        
+        verify(cartItemRepo).deleteByCart_CartId(cart.getCartId());
+        verify(cartRepo).save(cart);
+    }
+
+    @Test
+    void shouldClearEmptyCartIdempotently() {
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
+        
+        CartView result = cartService.clearCart(userId, null);
+        
+        assertNotNull(result);
+        assertTrue(result.items().isEmpty());
+        assertEquals(BigDecimal.ZERO, result.total());
     }
 }
