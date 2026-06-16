@@ -50,6 +50,10 @@ public class JWTService {
     return (String) getClaims(token).get("role");
   }
 
+  public String extractRestaurantId(String token) {
+    return (String) getClaims(token).get("restaurantId");
+  }
+
   private Claims getClaims(String token) {
     return Jwts.parserBuilder()
             .setSigningKey(key)
