@@ -205,9 +205,12 @@ export const RestaurantsPage = () => {
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col hover:-translate-y-1 h-full"
               >
                 {/* Abstract Background Header */}
-                <div className={`h-32 w-full bg-gradient-to-br ${getGradientForCuisine(r.cuisineType)} relative overflow-hidden`}>
-                  {/* Subtle pattern overlay */}
-                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                <div className={`h-32 w-full ${r.imageUrl ? 'bg-gray-200' : `bg-gradient-to-br ${getGradientForCuisine(r.cuisineType)}`} relative overflow-hidden`}>
+                  {r.imageUrl ? (
+                    <img src={r.imageUrl} alt={r.restaurantName} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                  )}
                   
                   {/* Floating Delivery Time Badge */}
                   <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-gray-800 shadow-sm flex items-center gap-1.5">

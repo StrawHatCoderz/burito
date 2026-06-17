@@ -245,7 +245,7 @@ export function RestaurantProfileForm() {
           )}
         </Box>
 
-        <Divider sx={{ mb: 4 }} />
+        {isEditMode && <Divider sx={{ mb: 4 }} />}
 
         {isEditMode ? (
           <Box component="form" onSubmit={handleSubmit}>
@@ -330,7 +330,7 @@ export function RestaurantProfileForm() {
         ) : null}
       </Box>
 
-      <Box sx={{ p: { xs: 3, md: 4 } }}>
+      <Box sx={{ px: { xs: 3, md: 4 }, pb: { xs: 3, md: 4 } }}>
         <MenuManager restaurantId={restaurantId} />
       </Box>
 
