@@ -82,7 +82,7 @@ interface MenuItemCardProps {
   onError: (message: string) => void
 }
 
-const DEFAULT_ITEM_IMAGE = 'https://images.unsplash.com/photo-1493770348161-369560ae357d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+const DEFAULT_ITEM_IMAGE = 'https://placehold.co/400x300/eeeeee/999999?text=No+Image'
 
 export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
   const imgUrl = item.imageUrl || DEFAULT_ITEM_IMAGE

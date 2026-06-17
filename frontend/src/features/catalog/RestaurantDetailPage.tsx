@@ -103,7 +103,7 @@ export const RestaurantDetailPage = () => {
   
   const availableCategories = menuSections.map(s => s.category)
 
-  const DEFAULT_RESTAURANT_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'
+  const DEFAULT_RESTAURANT_IMAGE = 'https://placehold.co/1200x400/eeeeee/999999?text=No+Image+Available'
   const bannerImg = restaurant.imageUrl || DEFAULT_RESTAURANT_IMAGE
 
   return (
