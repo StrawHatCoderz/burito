@@ -150,10 +150,10 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
         </Button>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: { xs: '12px', md: '8px' } }}>{error}</Alert>}
 
       {(menuItems || []).length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 6, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: '16px' }}>
+        <Box sx={{ textAlign: 'center', py: 6, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: { xs: '16px', md: '8px' } }}>
           <Typography variant="h6" color="text.secondary" fontWeight={600}>
             Your menu is empty
           </Typography>
@@ -172,7 +172,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
                 height: '100%', 
                 display: 'flex', 
                 flexDirection: 'column',
-                borderRadius: '16px',
+                borderRadius: { xs: '16px', md: '8px' },
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                 border: '1px solid rgba(0,0,0,0.08)',
                 transition: 'transform 0.2s, box-shadow 0.2s',

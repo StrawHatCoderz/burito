@@ -89,13 +89,13 @@ export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
 
   return (
     <div
-      className={`flex items-start justify-between gap-4 p-4 bg-bg-surface rounded-lg border border-border ${
+      className={`flex items-start justify-between gap-4 p-4 bg-bg-surface rounded-lg md:rounded-md border border-border ${
         !item.available 
           ? 'opacity-60 grayscale-[0.5]' 
           : 'hover:shadow-md hover:border-accent-subtle transition-all duration-200 ease-in-out'
       }`}
     >
-      <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 border border-border">
+      <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg md:rounded-md overflow-hidden bg-gray-100 border border-border">
         <img 
           src={imgUrl} 
           alt={item.name} 

@@ -51,7 +51,7 @@ export const RestaurantDetailPage = () => {
   if (status === 'loading') {
     return (
       <div className="min-h-screen thermal-sizzle flex flex-col items-center justify-center p-4">
-        <div className="bg-bg-surface/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-white/20">
+        <div className="bg-bg-surface/80 backdrop-blur-sm p-6 rounded-2xl md:rounded-lg shadow-sm border border-white/20">
           <h2 className="text-xl font-display font-semibold text-text-primary animate-pulse">
             Warming up the kitchen...
           </h2>
@@ -80,7 +80,7 @@ export const RestaurantDetailPage = () => {
   if (status === 'error') {
     return (
       <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center gap-4 p-4">
-        <div className="bg-[#FFF0F0] border border-[#FFCDCD] text-accent px-6 py-5 rounded-xl shadow-sm text-center max-w-md">
+        <div className="bg-[#FFF0F0] border border-[#FFCDCD] text-accent px-6 py-5 rounded-xl md:rounded-lg shadow-sm text-center max-w-md">
           <h3 className="font-display font-bold text-xl mb-2">Unable to load menu</h3>
           <p className="font-body text-sm opacity-90 leading-relaxed">Please check your internet connection and try again.</p>
         </div>
@@ -164,14 +164,14 @@ export const RestaurantDetailPage = () => {
       {/* Menu Content */}
       <div className="px-4 py-8 md:px-8 max-w-3xl mx-auto">
         {!restaurant.open && (
-          <div className="mb-8 bg-bg-surface border border-border rounded-xl p-5 text-center shadow-sm">
+          <div className="mb-8 bg-bg-surface border border-border rounded-xl md:rounded-lg p-5 text-center shadow-sm">
             <h3 className="font-display font-semibold text-text-primary text-lg">Restaurant is currently closed</h3>
             <p className="text-sm text-text-muted font-body mt-1">You can browse the menu, but ordering is disabled.</p>
           </div>
         )}
 
         {menuSections.length === 0 ? (
-          <div className="text-center py-16 bg-bg-surface rounded-2xl border border-border border-dashed">
+          <div className="text-center py-16 bg-bg-surface rounded-2xl md:rounded-lg border border-border border-dashed">
             <p className="text-text-muted font-body text-lg">Menu is currently unavailable.</p>
           </div>
         ) : (

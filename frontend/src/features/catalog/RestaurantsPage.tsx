@@ -144,7 +144,7 @@ export const RestaurantsPage = () => {
         {status === 'loading' && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col h-[280px]">
+              <div key={i} className="bg-white rounded-2xl md:rounded-lg overflow-hidden shadow-sm border border-gray-100 flex flex-col h-[280px]">
                 <Skeleton variant="rectangular" height={128} animation="wave" />
                 <div className="p-5 flex flex-col flex-1">
                   <Skeleton variant="text" height={32} width="70%" />
@@ -178,7 +178,7 @@ export const RestaurantsPage = () => {
 
         {/* Empty State */}
         {status === 'success' && restaurants.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl md:rounded-xl border border-gray-100 shadow-sm">
             <div className="text-6xl mb-4">🔍</div>
             <Typography variant="h5" fontWeight={700} gutterBottom color="textPrimary">
               No restaurants found
@@ -202,7 +202,7 @@ export const RestaurantsPage = () => {
               <div 
                 key={r.restaurantId}
                 onClick={() => navigate(`/restaurants/${r.restaurantId}`)}
-                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col hover:-translate-y-1 h-full"
+                className="group bg-white rounded-2xl md:rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col hover:-translate-y-1 h-full"
               >
                 {/* Abstract Background Header */}
                 <div className={`h-32 w-full ${r.imageUrl ? 'bg-gray-200' : `bg-gradient-to-br ${getGradientForCuisine(r.cuisineType)}`} relative overflow-hidden`}>

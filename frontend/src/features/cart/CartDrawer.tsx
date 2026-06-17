@@ -52,7 +52,7 @@ const CartItemRow = ({ item, onError }: { item: any; onError: (msg: string) => v
   }
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-white rounded-xl border border-gray-100 shadow-sm transition-all">
+    <div className="flex flex-col gap-3 p-4 bg-white rounded-xl md:rounded-lg border border-gray-100 shadow-sm transition-all">
       <div className="flex justify-between items-start gap-2">
         <Typography variant="body1" fontWeight={600} className="flex-1 leading-snug">
           {item.name}

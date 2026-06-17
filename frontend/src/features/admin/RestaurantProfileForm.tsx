@@ -210,7 +210,7 @@ export function RestaurantProfileForm() {
           mb: 4, 
           p: 2, 
           backgroundColor: formData.open ? 'rgba(46, 125, 50, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-          borderRadius: '12px',
+          borderRadius: { xs: '12px', md: '8px' },
           border: '1px solid',
           borderColor: formData.open ? 'rgba(46, 125, 50, 0.2)' : 'rgba(0, 0, 0, 0.08)'
         }}>
@@ -340,7 +340,7 @@ export function RestaurantProfileForm() {
         onClose={() => setSuccess(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%', borderRadius: '8px' }}>
+        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%', borderRadius: { xs: '8px', md: '4px' } }}>
           Profile updated successfully!
         </Alert>
       </Snackbar>

@@ -31,7 +31,7 @@ export const PromoCarousel = () => {
         {PROMOTIONS.map((promo) => (
           <div
             key={promo.id}
-            className={`flex-none w-[85%] md:w-[400px] h-32 md:h-36 rounded-[28px] bg-gradient-to-r ${promo.gradient} p-5 md:p-6 text-white snap-center sm:snap-start relative overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group flex items-center border border-white/10`}
+            className={`flex-none w-[85%] md:w-[400px] h-32 md:h-36 rounded-[28px] md:rounded-xl bg-gradient-to-r ${promo.gradient} p-5 md:p-6 text-white snap-center sm:snap-start relative overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group flex items-center border border-white/10`}
           >
             {/* Dynamic right-side graphics to break the "standard card" look */}
             <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden pointer-events-none">
