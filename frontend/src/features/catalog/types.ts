@@ -15,6 +15,7 @@ export interface Restaurant {
   rating: number
   estDeliveryMinutes: number
   open: boolean
+  imageUrl: string | null
   createdAt: string
   address: Address | null
 }
