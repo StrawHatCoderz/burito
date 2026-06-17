@@ -1,0 +1,1 @@
+ALTER TABLE menu_item ADD COLUMN image_url VARCHAR(255);
