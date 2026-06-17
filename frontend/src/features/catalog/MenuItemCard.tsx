@@ -91,6 +91,16 @@ export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
           : 'hover:shadow-md hover:border-accent-subtle transition-all duration-200 ease-in-out'
       }`}
     >
+      {item.imageUrl && (
+        <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 border border-border">
+          <img 
+            src={item.imageUrl} 
+            alt={item.name} 
+            className="w-full h-full object-cover" 
+            loading="lazy" 
+          />
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-base font-body font-semibold text-text-primary">
