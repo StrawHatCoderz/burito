@@ -92,4 +92,34 @@ public class AdminRestaurantControllerTest {
             .andDo(print())
             .andExpect(status().isForbidden());
   }
+
+  @Test
+  @WithMockUser(roles = "RESTAURANT_ADMIN")
+  void getRestaurant_success() throws Exception {
+    when(jwtService.extractRestaurantId(any())).thenReturn(restaurantId.toString());
+    when(adminRestaurantService.getRestaurant(eq(restaurantId), eq(restaurantId.toString())))
+            .thenReturn(updatedRestaurant);
+
+    mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/admin/restaurants/" + restaurantId)
+            .header("Authorization", "Bearer fake-token")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.restaurantName").value("New Name"))
+            .andExpect(jsonPath("$.imageUrl").value("http://image.url"));
+  }
+
+  @Test
+  @WithMockUser(roles = "RESTAURANT_ADMIN")
+  void getRestaurant_forbidden() throws Exception {
+    when(jwtService.extractRestaurantId(any())).thenReturn("some-other-id");
+    when(adminRestaurantService.getRestaurant(eq(restaurantId), eq("some-other-id")))
+            .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+    mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/admin/restaurants/" + restaurantId)
+            .header("Authorization", "Bearer fake-token")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isForbidden());
+  }
 }

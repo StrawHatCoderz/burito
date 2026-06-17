@@ -42,4 +42,13 @@ public class AdminRestaurantService {
 
     return restaurantRepo.save(restaurant);
   }
+
+  public Restaurant getRestaurant(UUID restaurantId, String tokenRestaurantId) {
+    if (tokenRestaurantId == null || !tokenRestaurantId.equals(restaurantId.toString())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. You can only view your own restaurant.");
+    }
+
+    return restaurantRepo.findById(restaurantId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+  }
 }

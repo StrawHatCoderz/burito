@@ -38,4 +38,18 @@ public class AdminRestaurantController {
     Restaurant updated = adminRestaurantService.updateRestaurant(id, restaurantId, request);
     return ResponseEntity.ok(updated);
   }
+
+  @GetMapping("/{id}")
+  @PreAuthorize("hasRole('RESTAURANT_ADMIN')")
+  public ResponseEntity<Restaurant> getRestaurant(
+          @PathVariable UUID id,
+          HttpServletRequest httpRequest) {
+          
+    String authHeader = httpRequest.getHeader("Authorization");
+    String token = Parser.parseJwtToken(authHeader);
+    String restaurantId = jwtService.extractRestaurantId(token);
+
+    Restaurant restaurant = adminRestaurantService.getRestaurant(id, restaurantId);
+    return ResponseEntity.ok(restaurant);
+  }
 }

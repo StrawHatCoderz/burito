@@ -88,4 +88,41 @@ public class AdminRestaurantServiceTest {
     assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     verify(restaurantRepo, never()).save(any());
   }
+
+  @Test
+  void getRestaurant_success() {
+    String tokenRestaurantId = restaurantId.toString();
+    when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+
+    Restaurant fetched = adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId);
+
+    assertNotNull(fetched);
+    assertEquals(restaurantId, fetched.getRestaurantId());
+    verify(restaurantRepo).findById(restaurantId);
+  }
+
+  @Test
+  void getRestaurant_forbidden_whenIdsMismatch() {
+    String tokenRestaurantId = UUID.randomUUID().toString(); // different id
+
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> 
+      adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId)
+    );
+
+    assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+    verify(restaurantRepo, never()).findById(any());
+  }
+
+  @Test
+  void getRestaurant_notFound_whenRestaurantDoesNotExist() {
+    String tokenRestaurantId = restaurantId.toString();
+
+    when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.empty());
+
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> 
+      adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId)
+    );
+
+    assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+  }
 }
