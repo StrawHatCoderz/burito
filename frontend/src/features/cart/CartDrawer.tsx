@@ -3,11 +3,11 @@ import Drawer from '@mui/material/Drawer'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Button from '@mui/material/Button'
-import Tooltip from '@mui/material/Tooltip'
 import Skeleton from '@mui/material/Skeleton'
 import { QuantityStepper } from '../../shared/ui/QuantityStepper'
 import { useCart } from './CartContext'
 import { addToCart, removeCartItem, decrementCartItem, clearCart } from './cartApi'
+import { checkoutCart } from '../orders/api/orders.api'
 import client from '../../shared/api/client'
 import { Toast } from '../../shared/ui/Toast'
 
@@ -81,10 +81,12 @@ export const CartDrawer = () => {
   const { cart, isCartOpen, closeCartDrawer, optimisticClear, syncFromBackend, rollback } = useCart()
   const [restaurantName, setRestaurantName] = useState<string | null>(null)
   const [loadingName, setLoadingName] = useState(false)
-  const [errorToast, setErrorToast] = useState({ open: false, message: '' })
+  const [toastConfig, setToastConfig] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({ open: false, message: '', severity: 'error' })
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
 
-  const closeToast = () => setErrorToast(prev => ({ ...prev, open: false }))
-  const showError = (message: string) => setErrorToast({ open: true, message })
+  const closeToast = () => setToastConfig(prev => ({ ...prev, open: false }))
+  const showError = (message: string) => setToastConfig({ open: true, message, severity: 'error' })
+  const showSuccess = (message: string) => setToastConfig({ open: true, message, severity: 'success' })
 
   useEffect(() => {
     if (cart.restaurantId && isCartOpen && !restaurantName) {
@@ -113,6 +115,20 @@ export const CartDrawer = () => {
     } catch (e) {
       rollback()
       showError('Failed to clear cart.')
+    }
+  }
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true)
+    try {
+      await checkoutCart()
+      showSuccess('Order placed successfully!')
+      optimisticClear()
+      setTimeout(() => closeCartDrawer(), 1500)
+    } catch (e: any) {
+      showError(e.message || 'Failed to place order.')
+    } finally {
+      setIsCheckingOut(false)
     }
   }
 
@@ -203,32 +219,31 @@ export const CartDrawer = () => {
                 ₹{cart.total.toFixed(2)}
               </Typography>
             </div>
-            <Tooltip title="Coming soon" arrow placement="top">
-              <span>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  disabled
-                  sx={{
-                    borderRadius: '9999px',
-                    py: 1.5,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    fontSize: '16px',
-                    '&.Mui-disabled': {
-                      bgcolor: '#E5E7EB',
-                      color: '#9CA3AF'
-                    }
-                  }}
-                >
-                  Proceed to Checkout
-                </Button>
-              </span>
-            </Tooltip>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+              sx={{
+                borderRadius: '9999px',
+                py: 1.5,
+                fontWeight: 700,
+                textTransform: 'none',
+                fontSize: '16px',
+                bgcolor: '#FF5A5F',
+                '&:hover': { bgcolor: '#E03C31' },
+                '&.Mui-disabled': {
+                  bgcolor: '#FF9A9E',
+                  color: '#fff'
+                }
+              }}
+            >
+              {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
+            </Button>
           </div>
         )}
       </Drawer>
-      <Toast open={errorToast.open} message={errorToast.message} onClose={closeToast} />
+      <Toast open={toastConfig.open} message={toastConfig.message} severity={toastConfig.severity} onClose={closeToast} />
     </>
   )
 }

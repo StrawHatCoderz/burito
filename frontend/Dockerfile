@@ -1,14 +1,14 @@
 FROM node:lts-alpine AS dev
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 FROM node:lts-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
