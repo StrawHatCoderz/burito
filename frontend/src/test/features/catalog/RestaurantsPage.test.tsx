@@ -21,6 +21,7 @@ const mockRestaurant: Restaurant = {
   open: true,
   createdAt: '2024-01-01',
   address: null,
+  imageUrl: null,
 }
 
 const renderPage = () =>

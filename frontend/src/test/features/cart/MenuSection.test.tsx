@@ -17,6 +17,7 @@ const mockMenuItem: MenuItem = {
   price: 150,
   category: 'MAINS',
   available: true,
+  imageUrl: null,
 }
 
 const mockUnavailableItem: MenuItem = {

@@ -1,12 +1,12 @@
-import React from 'react'
-import { Box, AppBar, Toolbar, Typography, Button, Container, useTheme } from '@mui/material'
+import { Box, AppBar, Toolbar, Typography, Button, Container } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/hooks/useAuth'
+
+import { RestaurantProfileForm } from './RestaurantProfileForm'
 
 export function AdminDashboard() {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const theme = useTheme()
 
   const handleLogout = () => {
     logout()
@@ -14,25 +14,51 @@ export function AdminDashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FAFAFA' }}>
-      <AppBar position="static" elevation={0} sx={{ backgroundColor: '#1A1A1A', borderBottom: '1px solid #333' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>
-            Burito Admin
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
+      position: 'relative',
+      zIndex: 0,
+      overflowX: 'hidden' // Prevents decorative blobs from causing horizontal scrollbars
+    }}>
+      {/* Decorative background blobs */}
+      <Box sx={{
+        position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px',
+        background: 'radial-gradient(circle, rgba(211,74,36,0.15) 0%, rgba(253,251,251,0) 70%)',
+        zIndex: -1, filter: 'blur(40px)', borderRadius: '50%'
+      }} />
+      <Box sx={{
+        position: 'absolute', bottom: '-10%', right: '-5%', width: '600px', height: '600px',
+        background: 'radial-gradient(circle, rgba(250,183,16,0.1) 0%, rgba(253,251,251,0) 70%)',
+        zIndex: -1, filter: 'blur(60px)', borderRadius: '50%'
+      }} />
+
+      <AppBar position="sticky" elevation={0} sx={{ 
+        background: 'rgba(26, 26, 26, 0.8)', 
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        px: { xs: 2, sm: 4 } // Fix unaligned UI
+      }}>
+        <Toolbar sx={{ maxWidth: '1200px', width: '100%', mx: 'auto' }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 800, letterSpacing: '-0.5px' }}>
+            Burito<span style={{ color: '#D34A24' }}>Admin</span>
           </Typography>
-          <Button color="inherit" onClick={handleLogout} sx={{ textTransform: 'none', fontWeight: 600 }}>
+          <Button color="inherit" onClick={handleLogout} sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}>
             Logout
           </Button>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="md" sx={{ py: 6 }}>
-        <Typography variant="h4" fontWeight={800} sx={{ mb: 4, color: '#1A1A1A' }}>
-          Restaurant Profile
-        </Typography>
-        <Box sx={{ p: 4, backgroundColor: '#FFFFFF', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-          <Typography variant="body1" color="text.secondary">
-            The profile form will be implemented here.
-          </Typography>
+
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
+        <Box sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+          backdropFilter: 'blur(20px)',
+          borderRadius: '24px', 
+          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+          border: '1px solid rgba(255,255,255,0.8)',
+          overflow: 'hidden'
+        }}>
+          <RestaurantProfileForm />
         </Box>
       </Container>
     </Box>

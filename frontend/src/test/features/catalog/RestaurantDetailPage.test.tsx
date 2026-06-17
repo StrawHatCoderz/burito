@@ -17,6 +17,7 @@ const mockRestaurant: Restaurant = {
   open: true,
   createdAt: '2024-01-01',
   address: null,
+  imageUrl: null,
 }
 
 const mockMenuItem: MenuItem = {
@@ -26,6 +27,7 @@ const mockMenuItem: MenuItem = {
   price: 349,
   category: 'MAINS',
   available: true,
+  imageUrl: null,
 }
 
 const renderPage = (id = 'abc-123') =>
