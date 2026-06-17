@@ -171,7 +171,7 @@ export function MenuItemForm({ open, onClose, initialData, onSubmit }: MenuItemF
             <TextField
               required
               fullWidth
-              label="Price ($)"
+              label="Price (₹)"
               name="price"
               type="number"
               inputProps={{ min: 0, step: 0.01 }}

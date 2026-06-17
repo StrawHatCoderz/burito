@@ -150,7 +150,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
 
       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
 
-      {menuItems.length === 0 ? (
+      {(menuItems || []).length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 6, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: '16px' }}>
           <Typography variant="h6" color="text.secondary" fontWeight={600}>
             Your menu is empty
@@ -164,7 +164,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {menuItems.map((item) => (
+          {(menuItems || []).map((item) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.menuItemId}>
               <Card sx={{ 
                 height: '100%', 
@@ -203,7 +203,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
                       {item.name}
                     </Typography>
                     <Typography variant="h6" color="#D34A24" fontWeight={800}>
-                      ${item.price.toFixed(2)}
+                      ₹{item.price.toFixed(2)}
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
