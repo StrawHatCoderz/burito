@@ -103,8 +103,16 @@ export const RestaurantDetailPage = () => {
   
   const availableCategories = menuSections.map(s => s.category)
 
+  const DEFAULT_RESTAURANT_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'
+  const bannerImg = restaurant.imageUrl || DEFAULT_RESTAURANT_IMAGE
+
   return (
     <div className="min-h-screen bg-bg-primary pb-24">
+      {/* Banner Image */}
+      <div className="w-full h-48 md:h-64 bg-gray-200">
+        <img src={bannerImg} alt={restaurant.restaurantName} className="w-full h-full object-cover" />
+      </div>
+
       {/* Compact Header */}
       <div className="bg-bg-surface px-4 py-4 md:px-8 border-b border-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-3 md:gap-4">

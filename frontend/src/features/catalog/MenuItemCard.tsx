@@ -82,7 +82,11 @@ interface MenuItemCardProps {
   onError: (message: string) => void
 }
 
+const DEFAULT_ITEM_IMAGE = 'https://images.unsplash.com/photo-1493770348161-369560ae357d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+
 export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
+  const imgUrl = item.imageUrl || DEFAULT_ITEM_IMAGE
+
   return (
     <div
       className={`flex items-start justify-between gap-4 p-4 bg-bg-surface rounded-lg border border-border ${
@@ -91,16 +95,14 @@ export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
           : 'hover:shadow-md hover:border-accent-subtle transition-all duration-200 ease-in-out'
       }`}
     >
-      {item.imageUrl && (
-        <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 border border-border">
-          <img 
-            src={item.imageUrl} 
-            alt={item.name} 
-            className="w-full h-full object-cover" 
-            loading="lazy" 
-          />
-        </div>
-      )}
+      <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 border border-border">
+        <img 
+          src={imgUrl} 
+          alt={item.name} 
+          className="w-full h-full object-cover" 
+          loading="lazy" 
+        />
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-base font-body font-semibold text-text-primary">

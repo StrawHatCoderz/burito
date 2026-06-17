@@ -44,6 +44,8 @@ const DeleteIcon = (props: SvgIconProps) => (
   </SvgIcon>
 )
 
+const DEFAULT_ITEM_IMAGE = 'https://images.unsplash.com/photo-1493770348161-369560ae357d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+
 interface MenuManagerProps {
   restaurantId: string
 }
@@ -183,7 +185,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
                   <CardMedia
                     component="img"
                     height="140"
-                    image={item.imageUrl || `https://via.placeholder.com/300x140.png?text=${encodeURIComponent(item.name)}`}
+                    image={item.imageUrl || DEFAULT_ITEM_IMAGE}
                     alt={item.name}
                     sx={{ backgroundColor: '#f5f5f5' }}
                   />
