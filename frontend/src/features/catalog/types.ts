@@ -27,6 +27,7 @@ export interface MenuItem {
   price: number
   category: string
   available: boolean
+  imageUrl: string | null
 }
 
 export interface RestaurantWithMenu {

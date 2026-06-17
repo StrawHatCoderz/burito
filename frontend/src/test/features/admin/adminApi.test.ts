@@ -7,6 +7,8 @@ vi.mock('../../../features/../shared/api/client', () => ({
   default: {
     get: vi.fn(),
     put: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
   },
 }))
 
@@ -25,17 +27,66 @@ describe('adminApi', () => {
   }
 
   it('getAdminRestaurant calls GET with correct URL', async () => {
-    vi.mocked(client.get).mockResolvedValue({ data: { data: mockRestaurant } })
+    vi.mocked(client.get).mockResolvedValue({ data: mockRestaurant })
     const res = await getAdminRestaurant('123')
     expect(client.get).toHaveBeenCalledWith('/admin/restaurants/123')
     expect(res).toEqual(mockRestaurant)
   })
 
   it('updateAdminRestaurant calls PUT with correct URL and payload', async () => {
-    vi.mocked(client.put).mockResolvedValue({ data: { data: mockRestaurant } })
+    vi.mocked(client.put).mockResolvedValue({ data: mockRestaurant })
     const payload = { open: false }
     const res = await updateAdminRestaurant('123', payload)
     expect(client.put).toHaveBeenCalledWith('/admin/restaurants/123', payload)
     expect(res).toEqual(mockRestaurant)
+  })
+
+  describe('Menu operations', () => {
+    const mockRestaurantId = 'rest-123'
+    const mockMenuItemId = 'item-456'
+
+    it('should fetch the menu for a restaurant', async () => {
+      const mockMenu = [{ menuItemId: '1', name: 'Tacos' }]
+      vi.mocked(client.get).mockResolvedValueOnce({ data: { data: mockMenu } })
+
+      const { getAdminMenu } = await import('../../../features/admin/adminApi')
+      const result = await getAdminMenu(mockRestaurantId)
+      
+      expect(client.get).toHaveBeenCalledWith(`/restaurants/${mockRestaurantId}/menu`)
+      expect(result).toEqual(mockMenu)
+    })
+
+    it('should add a menu item', async () => {
+      const payload = { name: 'Tacos', description: null, price: 10, category: 'MAINS', isAvailable: true, imageUrl: null }
+      const mockResponse = { menuItemId: '1', ...payload }
+      vi.mocked(client.post).mockResolvedValueOnce({ data: mockResponse })
+
+      const { addMenuItem } = await import('../../../features/admin/adminApi')
+      const result = await addMenuItem(mockRestaurantId, payload)
+      
+      expect(client.post).toHaveBeenCalledWith(`/admin/restaurants/${mockRestaurantId}/menu`, payload)
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should update a menu item', async () => {
+      const payload = { name: 'Burritos', description: null, price: 12, category: 'MAINS', isAvailable: true, imageUrl: null }
+      const mockResponse = { menuItemId: mockMenuItemId, ...payload }
+      vi.mocked(client.put).mockResolvedValueOnce({ data: mockResponse })
+
+      const { updateMenuItem } = await import('../../../features/admin/adminApi')
+      const result = await updateMenuItem(mockRestaurantId, mockMenuItemId, payload)
+      
+      expect(client.put).toHaveBeenCalledWith(`/admin/restaurants/${mockRestaurantId}/menu/${mockMenuItemId}`, payload)
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should delete a menu item', async () => {
+      vi.mocked(client.delete).mockResolvedValueOnce({ data: {} })
+
+      const { deleteMenuItem } = await import('../../../features/admin/adminApi')
+      await deleteMenuItem(mockRestaurantId, mockMenuItemId)
+      
+      expect(client.delete).toHaveBeenCalledWith(`/admin/restaurants/${mockRestaurantId}/menu/${mockMenuItemId}`)
+    })
   })
 })
