@@ -35,6 +35,9 @@ public class MenuItem {
   @Column(nullable = false)
   private boolean isAvailable;
 
+  @Column(name = "image_url")
+  private String imageUrl;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "restaurant_id", nullable = false)
   private Restaurant restaurant;
