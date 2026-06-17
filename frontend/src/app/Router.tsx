@@ -9,6 +9,7 @@ import { NavBar } from '../shared/ui/NavBar'
 import { CartDrawer } from '../features/cart/CartDrawer'
 import { AdminLoginPage } from '../features/admin/AdminLoginPage'
 import { AdminRegisterPage } from '../features/admin/AdminRegisterPage'
+import { AdminDashboard } from '../features/admin/AdminDashboard'
 
 export const Router = () => (
   <BrowserRouter>
@@ -17,6 +18,14 @@ export const Router = () => (
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin/register" element={<AdminRegisterPage />} />
+      <Route 
+        path="/admin/dashboard" 
+        element={
+          <ProtectedRoute requiredRole="RESTAURANT_ADMIN">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
       <Route element={<NavBar />}>
         <Route path="/restaurants" element={<RestaurantsPage />} />
         <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />

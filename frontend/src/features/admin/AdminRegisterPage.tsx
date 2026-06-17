@@ -18,11 +18,13 @@ import {
   InputAdornment,
   IconButton
 } from '@mui/material'
-import { adminRegister } from '../../shared/api/authApi'
+import { adminRegister, adminLogin } from '../../shared/api/authApi'
+import { useAuth } from '../../shared/hooks/useAuth'
 import bgImage from '../../assets/admin_register_bg.webp'
 
 export function AdminRegisterPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [formData, setFormData] = useState({
@@ -57,7 +59,9 @@ export function AdminRegisterPage() {
         estDeliveryMinutes: parseInt(formData.estimated_delivery_minutes, 10)
       }
       await adminRegister(payload)
-      navigate('/admin/login')
+      const loginResponse = await adminLogin({ email: formData.email, password: formData.password })
+      login(loginResponse.accessToken, true)
+      navigate('/admin/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Registration failed')
     } finally {

@@ -2,9 +2,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { AdminRegisterPage } from './AdminRegisterPage'
-import { adminRegister } from '../../shared/api/authApi'
+import { adminRegister, adminLogin } from '../../shared/api/authApi'
+import { useAuth } from '../../shared/hooks/useAuth'
 
 vi.mock('../../shared/api/authApi')
+vi.mock('../../shared/hooks/useAuth', () => ({
+  useAuth: vi.fn(),
+}))
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -16,8 +20,11 @@ vi.mock('react-router-dom', async () => {
 })
 
 describe('AdminRegisterPage', () => {
+  const mockLogin = vi.fn()
+
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(useAuth).mockReturnValue({ login: mockLogin } as any)
   })
 
   it('renders correctly', () => {
@@ -32,6 +39,7 @@ describe('AdminRegisterPage', () => {
 
   it('handles successful registration', async () => {
     vi.mocked(adminRegister).mockResolvedValue({ success: true })
+    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'test-token' })
     
     render(
       <MemoryRouter>
@@ -55,15 +63,17 @@ describe('AdminRegisterPage', () => {
 
     await waitFor(() => {
       expect(adminRegister).toHaveBeenCalledWith({
-        full_name: 'John Doe',
+        fullName: 'John Doe',
         email: 'admin@test.com',
         password: 'password123',
-        restaurant_name: 'My Resto',
-        cuisine_type: 'Italian',
-        estimated_delivery_minutes: 30
+        restaurantName: 'My Resto',
+        cuisineType: 'ITALIAN',
+        estDeliveryMinutes: 30
       })
+      expect(adminLogin).toHaveBeenCalledWith({ email: 'admin@test.com', password: 'password123' })
+      expect(mockLogin).toHaveBeenCalledWith('test-token', true)
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard')
     })
-    expect(mockNavigate).toHaveBeenCalledWith('/admin/login')
   })
 
   it('displays error on failed registration', async () => {
