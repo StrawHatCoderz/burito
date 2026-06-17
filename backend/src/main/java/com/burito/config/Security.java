@@ -32,7 +32,8 @@ public class Security {
                                     "/error",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
-                                    "/v3/api-docs/**"
+                                    "/v3/api-docs/**",
+                                    "/ws/**"
                             ).permitAll()
                             .requestMatchers("/api/admin/**").hasAuthority("ROLE_RESTAURANT_ADMIN")
                             .anyRequest()
