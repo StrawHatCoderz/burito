@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Drawer from '@mui/material/Drawer'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -10,8 +10,11 @@ import { addToCart, removeCartItem, decrementCartItem, clearCart } from './cartA
 import { checkoutCart } from '../orders/api/orders.api'
 import client from '../../shared/api/client'
 import { Toast } from '../../shared/ui/Toast'
+import { useAuth } from '../../shared/hooks/useAuth'
+import { useRestaurantSocket } from '../../shared/hooks/useRestaurantSocket'
+import { useNavigate } from 'react-router-dom'
 
-const CartItemRow = ({ item, onError }: { item: any; onError: (msg: string) => void }) => {
+const CartItemRow = ({ item, onError, restaurantOpen }: { item: any; onError: (msg: string) => void; restaurantOpen: boolean }) => {
   const { optimisticAdd, optimisticDecrement, optimisticRemove, syncFromBackend, rollback } = useCart()
   const [status, setStatus] = useState<'idle' | 'loading'>('idle')
 
@@ -71,6 +74,7 @@ const CartItemRow = ({ item, onError }: { item: any; onError: (msg: string) => v
           onIncrement={handleAdd}
           onDecrement={handleDecrement}
           isLoading={status === 'loading'}
+          incrementDisabled={!restaurantOpen}
         />
       </div>
     </div>
@@ -79,8 +83,12 @@ const CartItemRow = ({ item, onError }: { item: any; onError: (msg: string) => v
 
 export const CartDrawer = () => {
   const { cart, isCartOpen, closeCartDrawer, optimisticClear, syncFromBackend, rollback } = useCart()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   const [restaurantName, setRestaurantName] = useState<string | null>(null)
   const [loadingName, setLoadingName] = useState(false)
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState(true)
+  const [unavailableItemIds, setUnavailableItemIds] = useState<Set<string>>(new Set())
   const [toastConfig, setToastConfig] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({ open: false, message: '', severity: 'error' })
   const [isCheckingOut, setIsCheckingOut] = useState(false)
 
@@ -95,6 +103,7 @@ export const CartDrawer = () => {
         const data = res.data.data
         if (data && data.restaurant) {
           setRestaurantName(data.restaurant.restaurantName)
+          setIsRestaurantOpen(data.restaurant.open)
         }
         setLoadingName(false)
       }).catch(() => setLoadingName(false))
@@ -104,8 +113,38 @@ export const CartDrawer = () => {
   useEffect(() => {
     if (cart.items.length === 0) {
       setRestaurantName(null)
+      setUnavailableItemIds(new Set())
     }
   }, [cart.items.length])
+
+  // Live restaurant availability — flip checkout guard without page reload
+  const handleAvailability = useCallback((event: { open: boolean }) => {
+    setIsRestaurantOpen(event.open)
+  }, [])
+
+  // Live menu changes — flag deleted/unavailable cart items
+  const handleMenuEvent = useCallback((event: { type: string; item?: { menuItemId: string; available: boolean }; menuItemId?: string }) => {
+    const { type, item, menuItemId } = event
+    setUnavailableItemIds((prev) => {
+      const next = new Set(prev)
+      if (type === 'ITEM_DELETED' && menuItemId) {
+        next.add(menuItemId)
+      } else if (type === 'ITEM_AVAILABILITY_CHANGED' && item) {
+        if (!item.available) {
+          next.add(item.menuItemId)
+        } else {
+          next.delete(item.menuItemId)
+        }
+      }
+      return next
+    })
+  }, [])
+
+  useRestaurantSocket({
+    restaurantId: cart.restaurantId ?? null,
+    onAvailability: handleAvailability,
+    onMenu: handleMenuEvent,
+  })
 
   const handleClear = async () => {
     optimisticClear()
@@ -119,12 +158,17 @@ export const CartDrawer = () => {
   }
 
   const handleCheckout = async () => {
+    if (!isAuthenticated) {
+      return
+    }
+
     setIsCheckingOut(true)
     try {
       await checkoutCart()
       showSuccess('Order placed successfully!')
       optimisticClear()
-      setTimeout(() => closeCartDrawer(), 1500)
+      closeCartDrawer()
+      navigate('/orders/active')
     } catch (e: any) {
       showError(e.message || 'Failed to place order.')
     } finally {
@@ -203,7 +247,13 @@ export const CartDrawer = () => {
               ) : null}
 
               {cart.items.map(item => (
-                <CartItemRow key={item.cartItemId} item={item} onError={showError} />
+                <CartItemRow
+                  key={item.cartItemId}
+                  item={item}
+                  onError={showError}
+                  restaurantOpen={isRestaurantOpen}
+                  isUnavailable={unavailableItemIds.has(item.menuItemId)}
+                />
               ))}
             </>
           )}
@@ -219,11 +269,27 @@ export const CartDrawer = () => {
                 ₹{cart.total.toFixed(2)}
               </Typography>
             </div>
+
+            {unavailableItemIds.size > 0 && (
+              <div
+                role="status"
+                className="flex items-start gap-2 px-3 py-2.5 rounded-xl md:rounded-lg border text-sm font-body"
+                style={{ background: '#FFF0F0', borderColor: '#FFCDCD', color: '#991B1B' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 mt-0.5" aria-hidden="true">
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                </svg>
+                <span>
+                  Some items in your cart are <strong>no longer available</strong>. Remove them to continue.
+                </span>
+              </div>
+            )}
+
             <Button
               fullWidth
               variant="contained"
               onClick={handleCheckout}
-              disabled={isCheckingOut}
+              disabled={isCheckingOut || !isAuthenticated || !isRestaurantOpen || unavailableItemIds.size > 0}
               sx={{
                 borderRadius: '9999px',
                 py: 1.5,
@@ -238,8 +304,19 @@ export const CartDrawer = () => {
                 }
               }}
             >
-              {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
+              {isCheckingOut
+                ? 'Processing...'
+                : !isRestaurantOpen
+                ? 'Restaurant Closed'
+                : unavailableItemIds.size > 0
+                ? 'Items Unavailable'
+                : 'Proceed to Checkout'}
             </Button>
+            {!isAuthenticated && (
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 1 }}>
+                Please <span onClick={() => { closeCartDrawer(); navigate('/login?redirect=cart'); }} style={{ color: '#FF5A5F', cursor: 'pointer', fontWeight: 600 }}>login</span> to checkout
+              </Typography>
+            )}
           </div>
         )}
       </Drawer>

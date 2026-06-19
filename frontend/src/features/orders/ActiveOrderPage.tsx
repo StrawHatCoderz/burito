@@ -3,6 +3,7 @@ import { Container, Typography, Stepper, Step, StepLabel, Box, CircularProgress,
 import { getActiveOrder } from './api/orders.api'
 import { useNavigate } from 'react-router-dom'
 import { AxiosError } from 'axios'
+import { useWebSocket } from '../../shared/context/WebSocketContext'
 
 const steps = ['Pending', 'Accepted', 'Delivered']
 
@@ -10,6 +11,7 @@ export const ActiveOrderPage = () => {
   const [loading, setLoading] = useState(true)
   const [order, setOrder] = useState<any>(null)
   const navigate = useNavigate()
+  const { stompClient, isConnected } = useWebSocket()
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -27,6 +29,23 @@ export const ActiveOrderPage = () => {
     }
     fetchOrder()
   }, [navigate])
+
+  useEffect(() => {
+    if (!isConnected || !stompClient || !order?.id) return
+
+    const sub = stompClient.subscribe('/user/queue/orders', (msg) => {
+      try {
+        const event = JSON.parse(msg.body)
+        if (event.orderId === order.id) {
+          setOrder((prev: any) => ({ ...prev, status: event.status }))
+        }
+      } catch (e) {
+        console.error('Failed to parse order event', e)
+      }
+    })
+
+    return () => sub.unsubscribe()
+  }, [isConnected, stompClient, order?.id])
 
   if (loading) {
     return (

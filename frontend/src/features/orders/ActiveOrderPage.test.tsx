@@ -16,6 +16,13 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+vi.mock('../../shared/context/WebSocketContext', () => ({
+  useWebSocket: () => ({
+    stompClient: null,
+    isConnected: false,
+  })
+}))
+
 describe('ActiveOrderPage', () => {
   const mockNavigate = vi.fn()
 
