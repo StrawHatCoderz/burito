@@ -9,6 +9,8 @@ import { CartDrawer } from '../features/cart/CartDrawer'
 import { AdminLoginPage } from '../features/admin/AdminLoginPage'
 import { AdminRegisterPage } from '../features/admin/AdminRegisterPage'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
+import { OrderNotificationListener } from '../shared/ui/OrderNotificationListener'
+import { ActiveOrderPage } from '../features/orders/ActiveOrderPage'
 
 export const Router = () => (
   <BrowserRouter>
@@ -28,10 +30,14 @@ export const Router = () => (
       <Route element={<NavBar />}>
         <Route path="/restaurants" element={<RestaurantsPage />} />
         <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
+        <Route path="/orders/active" element={<ActiveOrderPage />} />
         <Route path="/" element={<Navigate to="/restaurants" replace />} />
         <Route path="*" element={<Navigate to="/restaurants" replace />} />
       </Route>
     </Routes>
     <CartDrawer />
+    {/* Global order status notifications for logged-in customers */}
+    <OrderNotificationListener />
   </BrowserRouter>
 )
+
