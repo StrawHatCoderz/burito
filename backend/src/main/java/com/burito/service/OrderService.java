@@ -91,7 +91,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderView getActiveOrder(UUID userId) {
-        Order activeOrder = orderRepo.findFirstByUser_UserIdAndStatusInOrderByCreatedAtDesc(
+        Order activeOrder = orderRepo.findFirstByCustomer_UserIdAndStatusInOrderByCreatedAtDesc(
                 userId, 
                 Arrays.asList(OrderStatus.PENDING, OrderStatus.ACCEPTED)
         );

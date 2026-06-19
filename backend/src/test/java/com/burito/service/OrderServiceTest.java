@@ -62,7 +62,7 @@ class OrderServiceTest {
         activeOrder.setId(UUID.randomUUID());
         activeOrder.setStatus(OrderStatus.ACCEPTED);
 
-        when(orderRepo.findFirstByUser_UserIdAndStatusInOrderByCreatedAtDesc(
+        when(orderRepo.findFirstByCustomer_UserIdAndStatusInOrderByCreatedAtDesc(
                 eq(userId), 
                 eq(Arrays.asList(OrderStatus.PENDING, OrderStatus.ACCEPTED))))
                 .thenReturn(activeOrder);
@@ -78,7 +78,7 @@ class OrderServiceTest {
     void getActiveOrder_returnsNullWhenNotFound() {
         UUID userId = UUID.randomUUID();
 
-        when(orderRepo.findFirstByUser_UserIdAndStatusInOrderByCreatedAtDesc(
+        when(orderRepo.findFirstByCustomer_UserIdAndStatusInOrderByCreatedAtDesc(
                 eq(userId), 
                 eq(Arrays.asList(OrderStatus.PENDING, OrderStatus.ACCEPTED))))
                 .thenReturn(null);
