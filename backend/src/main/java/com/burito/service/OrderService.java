@@ -10,11 +10,16 @@ import com.burito.repository.CartItemRepo;
 import com.burito.repository.CartRepo;
 import com.burito.repository.OrderRepo;
 import com.burito.repository.UserRepo;
+import com.burito.controller.AdminOrderController;
+import com.burito.controller.views.OrderView;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Arrays;
+import com.burito.enums.OrderStatus;
 
 @Service
 public class OrderService {
@@ -24,13 +29,15 @@ public class OrderService {
     private final CartItemRepo cartItemRepo;
     private final PaymentService paymentService;
     private final UserRepo userRepo;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public OrderService(OrderRepo orderRepo, CartRepo cartRepo, CartItemRepo cartItemRepo, PaymentService paymentService, UserRepo userRepo) {
+    public OrderService(OrderRepo orderRepo, CartRepo cartRepo, CartItemRepo cartItemRepo, PaymentService paymentService, UserRepo userRepo, SimpMessagingTemplate messagingTemplate) {
         this.orderRepo = orderRepo;
         this.cartRepo = cartRepo;
         this.cartItemRepo = cartItemRepo;
         this.paymentService = paymentService;
         this.userRepo = userRepo;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -44,6 +51,10 @@ public class OrderService {
         List<CartItem> cartItems = cartItemRepo.findByCart_CartId(cart.getCartId());
         if (cartItems.isEmpty()) {
             throw new IllegalStateException("Cannot checkout with an empty cart");
+        }
+
+        if (!cart.getRestaurant().isOpen()) {
+            throw new IllegalStateException("Restaurant is currently closed");
         }
 
         Double totalAmount = cart.getTotal().doubleValue();
@@ -72,6 +83,23 @@ public class OrderService {
         cart.setStatus(CartStatus.EXPIRED);
         cartRepo.save(cart);
 
+        OrderView view = AdminOrderController.mapToView(savedOrder);
+        messagingTemplate.convertAndSend("/topic/restaurant/" + cart.getRestaurant().getRestaurantId() + "/orders", view);
+
         return savedOrder;
+    }
+
+    @Transactional(readOnly = true)
+    public OrderView getActiveOrder(UUID userId) {
+        Order activeOrder = orderRepo.findFirstByUser_UserIdAndStatusInOrderByCreatedAtDesc(
+                userId, 
+                Arrays.asList(OrderStatus.PENDING, OrderStatus.ACCEPTED)
+        );
+        
+        if (activeOrder == null) {
+            return null;
+        }
+        
+        return AdminOrderController.mapToView(activeOrder);
     }
 }

@@ -7,6 +7,7 @@ import com.burito.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,5 +43,24 @@ public class OrderController {
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<?> getActiveOrder(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+
+        User user = userRepo.findUserByEmail(userDetails.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+
+        var activeOrder = orderService.getActiveOrder(user.getUserId());
+        if (activeOrder == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "No active order found"));
+        }
+
+        return ResponseEntity.ok(activeOrder);
     }
 }
