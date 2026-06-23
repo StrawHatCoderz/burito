@@ -8,6 +8,8 @@ interface QuantityStepperProps {
   onDecrement: () => void
   isLoading?: boolean
   size?: 'small' | 'normal'
+  /** Disables only the + (increment) button — decrement remains active */
+  incrementDisabled?: boolean
 }
 
 export const QuantityStepper = ({
@@ -15,7 +17,8 @@ export const QuantityStepper = ({
   onIncrement,
   onDecrement,
   isLoading = false,
-  size = 'normal'
+  size = 'normal',
+  incrementDisabled = false,
 }: QuantityStepperProps) => {
   const isSmall = size === 'small'
 
@@ -58,11 +61,12 @@ export const QuantityStepper = ({
       <IconButton
         size="small"
         onClick={onIncrement}
-        disabled={isLoading}
+        disabled={isLoading || incrementDisabled}
+        aria-label="Increase quantity"
         sx={{
-          color: '#FF5A5F',
+          color: incrementDisabled ? 'rgba(0,0,0,0.26)' : '#FF5A5F',
           padding: isSmall ? '2px' : '4px',
-          '&:hover': { bgcolor: 'rgba(255, 90, 95, 0.1)' }
+          '&:hover': { bgcolor: incrementDisabled ? 'transparent' : 'rgba(255, 90, 95, 0.1)' }
         }}
       >
         <svg viewBox="0 0 24 24" width={isSmall ? 16 : 20} height={isSmall ? 16 : 20} fill="currentColor">

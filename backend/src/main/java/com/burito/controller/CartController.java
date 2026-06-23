@@ -61,6 +61,9 @@ public class CartController {
     UUID userId = null;
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
+      if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
       userId = user.getUserId();
     }
 
@@ -81,6 +84,9 @@ public class CartController {
     UUID userId = null;
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
+      if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
       userId = user.getUserId();
     }
 
@@ -102,6 +108,9 @@ public class CartController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
     User user = authService.getCurrentUser(userDetails.getUsername());
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
     cartService.mergeCart(user.getUserId(), guestId);
     return ResponseEntity.ok(APIResponse.success(null));
   }
@@ -116,6 +125,9 @@ public class CartController {
     UUID userId = null;
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
+      if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
       userId = user.getUserId();
     }
 
@@ -137,6 +149,9 @@ public class CartController {
     UUID userId = null;
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
+      if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
       userId = user.getUserId();
     }
 
@@ -157,6 +172,9 @@ public class CartController {
     UUID userId = null;
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
+      if (user == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
       userId = user.getUserId();
     }
 

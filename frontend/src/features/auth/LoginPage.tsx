@@ -7,6 +7,7 @@ import InputAdornment from '@mui/material/InputAdornment'
 import * as authApi from '../../shared/api/authApi'
 import { useAuth } from '../../shared/hooks/useAuth'
 import { extractErrorMessage } from '../../shared/api/types'
+import * as cartApi from '../cart/cartApi'
 
 export const LoginPage = () => {
   const navigate = useNavigate()
@@ -25,6 +26,14 @@ export const LoginPage = () => {
     try {
       const responseBody = await authApi.login({ email, password })
       login(responseBody.data.accessToken)
+      
+      try {
+        await cartApi.mergeCart()
+        localStorage.removeItem('guest_id')
+      } catch (e) {
+        console.error('Failed to merge cart on login', e)
+      }
+
       navigate('/restaurants')
     } catch (error) {
       setErrorMessage(extractErrorMessage(error))

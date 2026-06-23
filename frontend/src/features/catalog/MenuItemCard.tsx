@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
+import Tooltip from '@mui/material/Tooltip'
 import { useCart } from '../cart/CartContext'
 import { addToCart, removeCartItem, decrementCartItem } from '../cart/cartApi'
 import { QuantityStepper } from '../../shared/ui/QuantityStepper'
@@ -8,16 +9,17 @@ import type { MenuItem } from './types'
 interface AddToCartButtonProps {
   item: MenuItem
   onError: (message: string) => void
+  restaurantOpen: boolean
 }
 
-const CartInteraction = ({ item, onError }: AddToCartButtonProps) => {
+const CartInteraction = ({ item, onError, restaurantOpen }: AddToCartButtonProps) => {
   const { cart, optimisticAdd, optimisticDecrement, optimisticRemove, syncFromBackend, rollback } = useCart()
   const [status, setStatus] = useState<'idle' | 'loading'>('idle')
 
   const cartItem = cart.items.find(i => i.menuItemId === item.menuItemId)
 
   const handleAdd = async () => {
-    if (status !== 'idle') return
+    if (status !== 'idle' || !restaurantOpen) return
     
     optimisticAdd(item)
     setStatus('loading')
@@ -62,29 +64,49 @@ const CartInteraction = ({ item, onError }: AddToCartButtonProps) => {
         onIncrement={handleAdd}
         onDecrement={handleDecrement}
         isLoading={status === 'loading'}
+        incrementDisabled={!restaurantOpen}
       />
     )
   }
 
   return (
-    <button
-      onClick={handleAdd}
-      disabled={status === 'loading'}
-      className="bg-accent text-bg-surface px-4 py-2 rounded-md font-body font-semibold text-sm transition-all hover:bg-[#B33F1F] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px]"
+    <Tooltip
+      title={!restaurantOpen ? 'This restaurant is currently closed' : ''}
+      placement="top"
+      arrow
     >
-      {status === 'loading' ? <CircularProgress size={16} color="inherit" /> : '+ Add'}
-    </button>
+      <span>
+        <button
+          onClick={handleAdd}
+          disabled={status === 'loading' || !restaurantOpen}
+          aria-disabled={!restaurantOpen}
+          aria-label={
+            !restaurantOpen
+              ? `Add ${item.name} to cart — restaurant is currently closed`
+              : `Add ${item.name} to cart`
+          }
+          className={`bg-accent text-bg-surface px-4 py-2 rounded-md font-body font-semibold text-sm transition-all flex items-center justify-center min-w-[80px] ${
+            !restaurantOpen
+              ? 'opacity-40 cursor-not-allowed'
+              : 'hover:bg-[#B33F1F] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed'
+          }`}
+        >
+          {status === 'loading' ? <CircularProgress size={16} color="inherit" /> : '+ Add'}
+        </button>
+      </span>
+    </Tooltip>
   )
 }
 
 interface MenuItemCardProps {
   item: MenuItem
   onError: (message: string) => void
+  restaurantOpen: boolean
 }
 
 const DEFAULT_ITEM_IMAGE = 'https://placehold.co/400x300/eeeeee/999999?text=No+Image'
 
-export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
+export const MenuItemCard = ({ item, onError, restaurantOpen }: MenuItemCardProps) => {
   const imgUrl = item.imageUrl || DEFAULT_ITEM_IMAGE
 
   return (
@@ -125,8 +147,9 @@ export const MenuItemCard = ({ item, onError }: MenuItemCardProps) => {
         <span className="text-base font-body font-semibold text-text-primary">
           ₹{item.price.toFixed(2)}
         </span>
-        {item.available && <CartInteraction item={item} onError={onError} />}
+        {item.available && <CartInteraction item={item} onError={onError} restaurantOpen={restaurantOpen} />}
       </div>
     </div>
   )
 }
+

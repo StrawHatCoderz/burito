@@ -1,11 +1,13 @@
 package com.burito.service;
 
+import com.burito.controller.views.MenuEvent;
 import com.burito.controller.views.MenuItemRequest;
 import com.burito.domain.MenuItem;
 import com.burito.domain.Restaurant;
 import com.burito.repository.MenuItemRepo;
 import com.burito.repository.RestaurantRepo;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -16,16 +18,22 @@ public class AdminMenuService {
 
     private final MenuItemRepo menuItemRepo;
     private final RestaurantRepo restaurantRepo;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public AdminMenuService(MenuItemRepo menuItemRepo, RestaurantRepo restaurantRepo) {
+    public AdminMenuService(MenuItemRepo menuItemRepo, RestaurantRepo restaurantRepo, SimpMessagingTemplate messagingTemplate) {
         this.menuItemRepo = menuItemRepo;
         this.restaurantRepo = restaurantRepo;
+        this.messagingTemplate = messagingTemplate;
     }
 
     private void validateOwnership(UUID restaurantId, String tokenRestaurantId) {
         if (tokenRestaurantId == null || !tokenRestaurantId.equals(restaurantId.toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. You can only manage menu items for your own restaurant.");
         }
+    }
+
+    private void broadcast(String restaurantId, MenuEvent event) {
+        messagingTemplate.convertAndSend("/topic/restaurant/" + restaurantId + "/menu", event);
     }
 
     public MenuItem createMenuItem(UUID restaurantId, String tokenRestaurantId, MenuItemRequest request) {
@@ -43,7 +51,9 @@ public class AdminMenuService {
         item.setImageUrl(request.imageUrl());
         item.setRestaurant(restaurant);
 
-        return menuItemRepo.save(item);
+        MenuItem saved = menuItemRepo.save(item);
+        broadcast(restaurantId.toString(), MenuEvent.added(restaurantId.toString(), saved));
+        return saved;
     }
 
     public MenuItem updateMenuItem(UUID restaurantId, UUID itemId, String tokenRestaurantId, MenuItemRequest request) {
@@ -56,6 +66,8 @@ public class AdminMenuService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Menu item does not belong to the specified restaurant");
         }
 
+        boolean availabilityChanged = item.isAvailable() != request.isAvailable();
+
         item.setName(request.name());
         item.setDescription(request.description());
         item.setPrice(request.price());
@@ -63,7 +75,15 @@ public class AdminMenuService {
         item.setAvailable(request.isAvailable());
         item.setImageUrl(request.imageUrl());
 
-        return menuItemRepo.save(item);
+        MenuItem saved = menuItemRepo.save(item);
+
+        // Use a more specific event type when only availability toggled
+        MenuEvent event = availabilityChanged
+                ? MenuEvent.availabilityChanged(restaurantId.toString(), saved)
+                : MenuEvent.updated(restaurantId.toString(), saved);
+        broadcast(restaurantId.toString(), event);
+
+        return saved;
     }
 
     public void deleteMenuItem(UUID restaurantId, UUID itemId, String tokenRestaurantId) {
@@ -77,5 +97,7 @@ public class AdminMenuService {
         }
 
         menuItemRepo.delete(item);
+        broadcast(restaurantId.toString(), MenuEvent.deleted(restaurantId.toString(), itemId.toString()));
     }
 }
+

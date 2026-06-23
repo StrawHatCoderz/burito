@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchRestaurantWithMenu } from './catalogApi'
 import { MenuSection } from './MenuSection'
 import { MenuCategoryNav } from './MenuCategoryNav'
+import { useRestaurantSocket } from '../../shared/hooks/useRestaurantSocket'
 import type { RestaurantWithMenu } from './types'
 
 const CATEGORY_ORDER = ['STARTERS', 'MAINS', 'SIDES', 'DESSERTS', 'BEVERAGES']
@@ -36,6 +37,38 @@ export const RestaurantDetailPage = () => {
       })
       .catch((error) => setStatus(is404(error) ? 'not-found' : 'error'))
   }, [id])
+
+  // Live availability update — flip open flag without a full reload
+  const handleAvailability = useCallback((event: { open: boolean }) => {
+    setData((prev) =>
+      prev ? { ...prev, restaurant: { ...prev.restaurant, open: event.open } } : prev
+    )
+  }, [])
+
+  // Live menu item updates
+  const handleMenuEvent = useCallback((event: { type: string; item?: any; menuItemId?: string }) => {
+    setData((prev) => {
+      if (!prev) return prev
+      const { type, item, menuItemId } = event
+      let items = [...prev.menuItems]
+
+      if (type === 'ITEM_ADDED' && item) {
+        items = [...items, item]
+      } else if ((type === 'ITEM_UPDATED' || type === 'ITEM_AVAILABILITY_CHANGED') && item) {
+        items = items.map((i) => (i.menuItemId === item.menuItemId ? item : i))
+      } else if (type === 'ITEM_DELETED' && menuItemId) {
+        items = items.filter((i) => i.menuItemId !== menuItemId)
+      }
+
+      return { ...prev, menuItems: items }
+    })
+  }, [])
+
+  useRestaurantSocket({
+    restaurantId: id ?? null,
+    onAvailability: handleAvailability,
+    onMenu: handleMenuEvent,
+  })
 
   // Simple scroll handler
   const handleCategorySelect = (category: string) => {
@@ -176,7 +209,7 @@ export const RestaurantDetailPage = () => {
           </div>
         ) : (
           menuSections.map((section) => (
-            <MenuSection key={section.category} category={section.category} items={section.items} />
+            <MenuSection key={section.category} category={section.category} items={section.items} restaurantOpen={restaurant.open} />
           ))
         )}
       </div>

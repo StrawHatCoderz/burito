@@ -39,6 +39,9 @@ public class UserController {
   public ResponseEntity<APIResponse<UserProfileView>> getCurrentUser(
           @AuthenticationPrincipal UserDetails userDetails) {
     User user = authService.getCurrentUser(userDetails.getUsername());
+    if (user == null) {
+      return ResponseEntity.status(401).build();
+    }
     return ResponseEntity.ok(APIResponse.success(
             new UserProfileView(user.getUserId(), user.getEmail(), user.getFullName(), user.getCreatedAt())
     ));

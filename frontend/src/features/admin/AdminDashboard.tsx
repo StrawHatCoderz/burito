@@ -1,12 +1,15 @@
-import { Box, AppBar, Toolbar, Typography, Button, Container } from '@mui/material'
+import { useState } from 'react'
+import { Box, AppBar, Toolbar, Typography, Button, Container, Tabs, Tab } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/hooks/useAuth'
 
 import { RestaurantProfileForm } from './RestaurantProfileForm'
+import { AdminOrderDashboard } from './AdminOrderDashboard'
 
 export function AdminDashboard() {
   const { logout } = useAuth()
   const navigate = useNavigate()
+  const [currentTab, setCurrentTab] = useState(0)
 
   const handleLogout = () => {
     logout()
@@ -50,6 +53,30 @@ export function AdminDashboard() {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
+        <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs 
+            value={currentTab} 
+            onChange={(_, newValue) => setCurrentTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                fontWeight: 700,
+                textTransform: 'none',
+                fontSize: '16px',
+                color: '#6B7280'
+              },
+              '& .Mui-selected': {
+                color: '#D34A24 !important'
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#D34A24'
+              }
+            }}
+          >
+            <Tab label="Orders" />
+            <Tab label="Profile & Menu" />
+          </Tabs>
+        </Box>
+
         <Box sx={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.9)', 
           backdropFilter: 'blur(20px)',
@@ -58,7 +85,8 @@ export function AdminDashboard() {
           border: '1px solid rgba(255,255,255,0.8)',
           overflow: 'hidden'
         }}>
-          <RestaurantProfileForm />
+          {currentTab === 0 && <AdminOrderDashboard />}
+          {currentTab === 1 && <RestaurantProfileForm />}
         </Box>
       </Container>
     </Box>

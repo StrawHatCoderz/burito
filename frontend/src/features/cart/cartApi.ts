@@ -27,3 +27,10 @@ export const clearCart = async (): Promise<CartView> => {
   const { data } = await client.delete<ApiResponse<CartView>>('/cart')
   return data.data!
 }
+
+export const mergeCart = async (): Promise<void> => {
+  const guestId = localStorage.getItem('guest_id')
+  if (guestId) {
+    await client.post('/cart/merge', null, { headers: { 'X-Guest-Id': guestId } })
+  }
+}

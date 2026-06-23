@@ -6,12 +6,13 @@ import type { MenuItem } from './types'
 interface MenuSectionProps {
   category: string
   items: MenuItem[]
+  restaurantOpen: boolean
 }
 
 const formatLabel = (category: string) =>
   category.charAt(0) + category.slice(1).toLowerCase()
 
-export const MenuSection = ({ category, items }: MenuSectionProps) => {
+export const MenuSection = ({ category, items, restaurantOpen }: MenuSectionProps) => {
   const [errorToast, setErrorToast] = useState<{ open: boolean; message: string }>({ open: false, message: '' })
 
   const handleError = (message: string) => setErrorToast({ open: true, message })
@@ -32,10 +33,11 @@ export const MenuSection = ({ category, items }: MenuSectionProps) => {
             return a.available ? -1 : 1;
           })
           .map((item) => (
-            <MenuItemCard key={item.menuItemId} item={item} onError={handleError} />
+            <MenuItemCard key={item.menuItemId} item={item} onError={handleError} restaurantOpen={restaurantOpen} />
           ))}
       </div>
       <Toast open={errorToast.open} message={errorToast.message} onClose={closeToast} />
     </div>
   )
 }
+
