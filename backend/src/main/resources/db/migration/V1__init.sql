@@ -16,7 +16,7 @@ CREATE TABLE restaurant (
     rating               DOUBLE PRECISION NOT NULL,
     est_delivery_minutes DOUBLE PRECISION NOT NULL,
     is_open              BOOLEAN          NOT NULL,
-    created_at           DATE,
+    created_at           TIMESTAMP,
     address_id                   BIGINT,
     CONSTRAINT pk_restaurant         PRIMARY KEY (restaurant_id),
     CONSTRAINT fk_restaurant_address FOREIGN KEY (address_id) REFERENCES address (address_id)

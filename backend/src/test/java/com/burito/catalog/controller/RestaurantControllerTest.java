@@ -23,7 +23,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -74,7 +74,7 @@ class RestaurantControllerTest {
                     20,
                     true,
                     address);
-    restaurant.setCreatedAt(LocalDate.of(2024, 1, 15));
+    restaurant.setCreatedAt(LocalDateTime.of(2024, 1, 15, 12, 0));
 
     when(restaurantService.search(isNull(), isNull())).thenReturn(List.of(restaurant));
 
@@ -83,7 +83,7 @@ class RestaurantControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].restaurantName").value("Spicy Hub"))
             .andExpect(jsonPath("$.data[0].rating").value(4.6))
-            .andExpect(jsonPath("$.data[0].createdAt").value("2024-01-15"));
+            .andExpect(jsonPath("$.data[0].createdAt").value("2024-01-15T12:00:00"));
   }
 
   @Test
@@ -137,7 +137,7 @@ class RestaurantControllerTest {
                     20,
                     true,
                     address);
-    restaurant.setCreatedAt(LocalDate.of(2024, 1, 15));
+    restaurant.setCreatedAt(LocalDateTime.of(2024, 1, 15, 12, 0));
 
     when(restaurantService.get(restaurant.getRestaurantId()))
             .thenReturn(restaurant);
@@ -147,7 +147,7 @@ class RestaurantControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.restaurantName").value("Spicy Hub"))
             .andExpect(jsonPath("$.data.rating").value(4.6))
-            .andExpect(jsonPath("$.data.createdAt").value("2024-01-15"))
+            .andExpect(jsonPath("$.data.createdAt").value("2024-01-15T12:00:00"))
             .andExpect(jsonPath("$.data.address.city").exists());
   }
 

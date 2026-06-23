@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -28,8 +30,9 @@ public class Restaurant {
   private double rating;
   private double estDeliveryMinutes;
   private boolean isOpen;
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-  private LocalDate createdAt;
+  @CreationTimestamp
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  private LocalDateTime createdAt;
 
   @ManyToOne
   @JoinColumn(name = "address_id")
