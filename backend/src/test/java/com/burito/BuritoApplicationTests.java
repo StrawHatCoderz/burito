@@ -1,6 +1,6 @@
 package com.burito;
 
-import com.burito.config.TestcontainersConfig;
+import com.burito.core.config.TestcontainersConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
