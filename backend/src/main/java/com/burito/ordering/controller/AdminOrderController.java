@@ -13,7 +13,7 @@ import com.burito.ordering.domain.Order;
 import com.burito.catalog.domain.Restaurant;
 import com.burito.identity.domain.User;
 import com.burito.ordering.enums.OrderStatus;
-import com.burito.ordering.repository.OrderRepo;
+import com.burito.ordering.service.OrderService;
 import com.burito.catalog.service.RestaurantService;
 import com.burito.identity.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +33,13 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('RESTAURANT_ADMIN')")
 public class AdminOrderController {
 
-    private final OrderRepo orderRepo;
+    private final OrderService orderService;
     private final RestaurantService restaurantService;
     private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public AdminOrderController(OrderRepo orderRepo, RestaurantService restaurantService, UserService userService, SimpMessagingTemplate messagingTemplate) {
-        this.orderRepo = orderRepo;
+    public AdminOrderController(OrderService orderService, RestaurantService restaurantService, UserService userService, SimpMessagingTemplate messagingTemplate) {
+        this.orderService = orderService;
         this.restaurantService = restaurantService;
         this.userService = userService;
         this.messagingTemplate = messagingTemplate;
@@ -56,10 +56,7 @@ public class AdminOrderController {
             return ResponseEntity.badRequest().body(Map.of("error", "Restaurant not found for admin"));
         }
 
-        List<Order> orders = orderRepo.findByRestaurant_RestaurantIdAndStatusInOrderByCreatedAtDesc(
-                restaurantId,
-                List.of(OrderStatus.PENDING, OrderStatus.ACCEPTED)
-        );
+        List<Order> orders = orderService.getActiveOrders(restaurantId);
 
         List<OrderView> orderViews = orders.stream().map(AdminOrderController::mapToView).collect(Collectors.toList());
         return ResponseEntity.ok(orderViews);
@@ -77,17 +74,9 @@ public class AdminOrderController {
         }
         UUID adminRestaurantId = restaurantService.getRestaurantIdByOwnerId(admin.getUserId());
 
-        Order order = orderRepo.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-
-        if (adminRestaurantId == null || !order.getRestaurant().getRestaurantId().equals(adminRestaurantId)) {
-            return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
-        }
-
         try {
             OrderStatus newStatus = OrderStatus.valueOf(payload.get("status").toUpperCase());
-            order.setStatus(newStatus);
-            Order savedOrder = orderRepo.save(order);
+            Order savedOrder = orderService.updateOrderStatus(orderId, adminRestaurantId, newStatus);
 
             String customerId = savedOrder.getCustomer().getUserId().toString();
             String restaurantId = savedOrder.getRestaurant().getRestaurantId().toString();
@@ -109,8 +98,10 @@ public class AdminOrderController {
                     customerEmail, "/queue/orders", statusEvent);
 
             return ResponseEntity.ok(mapToView(savedOrder));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status or order not found"));
         }
     }
 

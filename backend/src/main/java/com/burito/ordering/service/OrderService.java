@@ -104,4 +104,25 @@ public class OrderService {
         
         return AdminOrderController.mapToView(activeOrder);
     }
+
+    @Transactional(readOnly = true)
+    public List<Order> getActiveOrders(UUID restaurantId) {
+        return orderRepo.findByRestaurant_RestaurantIdAndStatusInOrderByCreatedAtDesc(
+                restaurantId,
+                Arrays.asList(OrderStatus.PENDING, OrderStatus.ACCEPTED)
+        );
+    }
+
+    @Transactional
+    public Order updateOrderStatus(UUID orderId, UUID adminRestaurantId, OrderStatus newStatus) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        if (adminRestaurantId == null || !order.getRestaurant().getRestaurantId().equals(adminRestaurantId)) {
+            throw new IllegalStateException("Forbidden");
+        }
+
+        order.setStatus(newStatus);
+        return orderRepo.save(order);
+    }
 }
