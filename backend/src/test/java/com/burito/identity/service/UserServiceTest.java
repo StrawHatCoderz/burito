@@ -36,6 +36,19 @@ class UserServiceTest {
   }
 
   @Test
+  void shouldReturnUserDetailsWithAdminRoleWhenUserIsAdmin() {
+    User admin = new User("Admin", "admin@test.com", "hashedPassword", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    when(userRepo.findUserByEmail("admin@test.com")).thenReturn(admin);
+
+    UserDetails details = userService.loadUserByUsername("admin@test.com");
+
+    assertEquals("admin@test.com", details.getUsername());
+    assertEquals("hashedPassword", details.getPassword());
+    assertTrue(details.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_RESTAURANT_ADMIN")));
+  }
+
+  @Test
   void shouldThrowUsernameNotFoundExceptionWhenUserDoesNotExist() {
     when(userRepo.findUserByEmail("nobody@test.com")).thenReturn(null);
 

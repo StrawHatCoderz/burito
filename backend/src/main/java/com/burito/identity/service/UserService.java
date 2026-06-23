@@ -38,7 +38,7 @@ public class UserService implements UserDetailsService {
     return org.springframework.security.core.userdetails.User.builder()
             .username(user.getEmail())
             .password(user.getHashPassword())
-            .roles("USER")
+            .roles(user.getRole().name())
             .build();
   }
 }
