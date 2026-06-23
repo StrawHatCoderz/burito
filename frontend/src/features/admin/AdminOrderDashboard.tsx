@@ -26,16 +26,23 @@ export function AdminOrderDashboard() {
 
   useEffect(() => {
     if (isConnected && stompClient && restaurantId) {
-      console.log(`Subscribing to /topic/restaurant/${restaurantId}/orders`)
-      const subscription = stompClient.subscribe(`/topic/restaurant/${restaurantId}/orders`, (message) => {
+      console.log(`Subscribing to /topic/restaurant/${restaurantId}/orders and /order-status`)
+      const orderSub = stompClient.subscribe(`/topic/restaurant/${restaurantId}/orders`, (message) => {
         const newOrder = JSON.parse(message.body)
         console.log('Received new order via WebSocket:', newOrder)
         setOrders(prev => [newOrder, ...prev])
       })
 
+      const statusSub = stompClient.subscribe(`/topic/restaurant/${restaurantId}/order-status`, (message) => {
+        const event = JSON.parse(message.body)
+        console.log('Received order status update via WebSocket:', event)
+        setOrders(prev => prev.map(o => o.id === event.orderId ? { ...o, status: event.status } : o))
+      })
+
       return () => {
-        console.log(`Unsubscribing from /topic/restaurant/${restaurantId}/orders`)
-        subscription.unsubscribe()
+        console.log(`Unsubscribing from /topic/restaurant/${restaurantId}/orders and /order-status`)
+        orderSub.unsubscribe()
+        statusSub.unsubscribe()
       }
     }
   }, [isConnected, stompClient, restaurantId])

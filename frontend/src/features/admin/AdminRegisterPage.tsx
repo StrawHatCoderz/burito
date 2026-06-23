@@ -60,7 +60,7 @@ export function AdminRegisterPage() {
       }
       await adminRegister(payload)
       const loginResponse = await adminLogin({ email: formData.email, password: formData.password })
-      login(loginResponse.accessToken, true)
+      login(loginResponse.accessToken, loginResponse.refreshToken, true)
       navigate('/admin/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Registration failed')

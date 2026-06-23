@@ -25,7 +25,7 @@ export const LoginPage = () => {
 
     try {
       const responseBody = await authApi.login({ email, password })
-      login(responseBody.data.accessToken)
+      login(responseBody.data.accessToken, responseBody.data.refreshToken)
       
       try {
         await cartApi.mergeCart()

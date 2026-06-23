@@ -98,8 +98,9 @@ public class AdminOrderController {
                     "/topic/restaurant/" + restaurantId + "/order-status", statusEvent);
 
             // Notify the specific customer who placed the order
+            String customerEmail = savedOrder.getCustomer().getEmail();
             messagingTemplate.convertAndSendToUser(
-                    customerId, "/queue/orders", statusEvent);
+                    customerEmail, "/queue/orders", statusEvent);
 
             return ResponseEntity.ok(mapToView(savedOrder));
         } catch (IllegalArgumentException e) {

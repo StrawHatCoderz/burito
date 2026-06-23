@@ -2,13 +2,14 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 import { jwtDecode } from 'jwt-decode'
 
 const TOKEN_KEY = 'burito_token'
+const REFRESH_TOKEN_KEY = 'burito_refresh_token'
 
 interface AuthContextValue {
   token: string | null
   isAuthenticated: boolean
   role: string | null
   restaurantId: string | null
-  login: (newToken: string, isAdminLogin?: boolean) => void
+  login: (newToken: string, newRefreshToken: string, isAdminLogin?: boolean) => void
   logout: () => void
 }
 
@@ -31,16 +32,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const role = decodedToken?.role || null
   const restaurantId = decodedToken?.restaurantId || null
 
-  const login = useCallback((newToken: string, isAdminLogin: boolean = false) => {
+  const login = useCallback((newToken: string, newRefreshToken: string, isAdminLogin: boolean = false) => {
     try {
       const decoded = jwtDecode<any>(newToken)
       if (isAdminLogin && decoded.role !== 'RESTAURANT_ADMIN') {
         throw new Error('Unauthorized: Admin role required')
       }
       localStorage.setItem(TOKEN_KEY, newToken)
+      localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken)
       setToken(newToken)
     } catch (error) {
       localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(REFRESH_TOKEN_KEY)
       setToken(null)
       throw error
     }
@@ -48,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
     setToken(null)
   }, [])
 

@@ -37,7 +37,7 @@ export function AdminLoginPage() {
 
     try {
       const response = await adminLogin({ email, password })
-      login(response.accessToken, true)
+      login(response.accessToken, response.refreshToken, true)
       navigate('/admin/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Login failed')
