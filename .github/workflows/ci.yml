@@ -18,13 +18,9 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Build
+      - name: Build & Verify Coverage
         working-directory: backend
-        run: ./gradlew bootJar --no-daemon
-
-      - name: Test
-        working-directory: backend
-        run: ./gradlew test --no-daemon
+        run: ./gradlew build --no-daemon
 
       - name: Upload test results
         if: always()
@@ -36,13 +32,29 @@ jobs:
             backend/build/reports/tests/test/
 
   frontend:
-    name: Frontend — validate
+    name: Frontend — build & test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate placeholder exists
-        run: test -f frontend/index.html
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint (Warn only)
+        working-directory: frontend
+        run: npm run lint || true
+
+      - name: Test
+        working-directory: frontend
+        run: npm run test --run
 
   lint:
     name: Lint — Checkstyle
@@ -67,3 +79,43 @@ jobs:
         with:
           name: checkstyle-report
           path: backend/build/reports/checkstyle/
+
+  security:
+    name: Security Scan — Snyk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Snyk Backend Scan
+        working-directory: backend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --severity-threshold=high
+
+      - name: Snyk Frontend Scan
+        working-directory: frontend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --severity-threshold=high
+

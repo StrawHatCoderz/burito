@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi, beforeEach, describe, it, expect } from 'vitest'
 import { MenuSection } from '../../../features/catalog/MenuSection'
@@ -94,9 +94,11 @@ describe('MenuSection Add to Cart', () => {
 
   it('rolls back optimistic state and shows a toast on failure', async () => {
     const user = userEvent.setup()
-    vi.mocked(cartApi.addToCart).mockImplementation(
-      () => new Promise((_, reject) => setTimeout(() => reject(new Error('Network failure')), 10))
-    )
+    let rejectPromise: (err: any) => void = () => {}
+    const promise = new Promise((_, reject) => {
+      rejectPromise = reject
+    })
+    vi.mocked(cartApi.addToCart).mockReturnValue(promise)
 
     renderWithProvider([mockMenuItem])
 
@@ -107,6 +109,10 @@ describe('MenuSection Add to Cart', () => {
 
     // Optimistic update happens
     expect(screen.getByTestId('cart-state')).toHaveTextContent('Items: 1, Total: 150')
+
+    await act(async () => {
+      rejectPromise(new Error('Network failure'))
+    })
 
     // Error toast appears
     expect(await screen.findByText('Failed to add item. Please try again.')).toBeInTheDocument()

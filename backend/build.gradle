@@ -90,3 +90,26 @@ jacocoTestReport {
 		}))
 	}
 }
+
+jacocoTestCoverageVerification {
+	dependsOn jacocoTestReport
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.85
+			}
+		}
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+				'com/burito/BuritoApplication.class',
+				'com/burito/utils/Parser.class',
+				'com/burito/domain/RefreshToken.class'
+			])
+		}))
+	}
+}
+
+check.dependsOn jacocoTestCoverageVerification
+

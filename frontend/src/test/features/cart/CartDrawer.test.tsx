@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi, beforeEach, describe, it, expect } from 'vitest'
 import { CartDrawer } from '../../../features/cart/CartDrawer'
@@ -108,9 +108,11 @@ describe('CartDrawer', () => {
 
   it('rolls back state on failure', async () => {
     const user = userEvent.setup()
-    vi.mocked(cartApi.removeCartItem).mockImplementation(
-      () => new Promise((_, reject) => setTimeout(() => reject(new Error('Network error')), 10))
-    )
+    let rejectPromise: (err: any) => void = () => {}
+    const promise = new Promise((_, reject) => {
+      rejectPromise = reject
+    })
+    vi.mocked(cartApi.removeCartItem).mockReturnValue(promise)
 
     renderWithProvider(mockCartSingleItem)
     await user.click(screen.getByText('Open'))
@@ -120,6 +122,11 @@ describe('CartDrawer', () => {
     await user.click(removeBtn)
 
     expect(screen.queryByText('Burger')).not.toBeInTheDocument()
+
+    await act(async () => {
+      rejectPromise(new Error('Network error'))
+    })
+
     expect(await screen.findByText('Burger')).toBeInTheDocument()
     expect(await screen.findByText('Failed to remove item.')).toBeInTheDocument()
   })
