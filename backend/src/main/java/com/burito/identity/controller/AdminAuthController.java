@@ -39,17 +39,17 @@ public class AdminAuthController {
 
   @PostMapping("/register")
   @Operation(summary = "Register a new restaurant admin")
-  public ResponseEntity<UserCreationView> register(@RequestBody AdminRegisterRequest request) {
+  public ResponseEntity<APIResponse<UserCreationView>> register(@RequestBody AdminRegisterRequest request) {
     try {
       UserCreationView view = authService.registerAdmin(
           request.fullName(), request.email(), request.password(),
           request.restaurantName(), request.cuisineType(), request.estDeliveryMinutes()
       );
-      return new ResponseEntity<>(view, HttpStatus.CREATED);
+      return new ResponseEntity<>(APIResponse.success(view), HttpStatus.CREATED);
     } catch (EmailAlreadyExistsException e) {
-      return new ResponseEntity<>(HttpStatus.CONFLICT);
+      throw com.burito.core.exceptions.APIException.badRequest("Email already exists");
     } catch (InvalidCredentialsException e) {
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      throw com.burito.core.exceptions.APIException.badRequest("Invalid credentials");
     }
   }
 
@@ -57,12 +57,12 @@ public class AdminAuthController {
 
   @PostMapping("/login")
   @Operation(summary = "Login an existing restaurant admin")
-  public ResponseEntity<JWTToken> login(@RequestBody AdminLoginRequest request) {
+  public ResponseEntity<APIResponse<JWTToken>> login(@RequestBody AdminLoginRequest request) {
     try {
       JWTToken token = authService.login(request.email(), request.password());
-      return new ResponseEntity<>(token, HttpStatus.OK);
+      return new ResponseEntity<>(APIResponse.success(token), HttpStatus.OK);
     } catch (InvalidCredentialsException e) {
-      return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+      throw com.burito.core.exceptions.APIException.unauthorized();
     }
   }
 }

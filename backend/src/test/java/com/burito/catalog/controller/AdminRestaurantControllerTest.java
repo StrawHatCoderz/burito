@@ -99,8 +99,8 @@ public class AdminRestaurantControllerTest {
             .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.restaurantName").value("New Name"))
-            .andExpect(jsonPath("$.imageUrl").value("http://image.url"));
+            .andExpect(jsonPath("$.data.restaurantName").value("New Name"))
+            .andExpect(jsonPath("$.data.imageUrl").value("http://image.url"));
   }
 
   @Test
@@ -130,8 +130,8 @@ public class AdminRestaurantControllerTest {
             .contentType(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.restaurantName").value("New Name"))
-            .andExpect(jsonPath("$.imageUrl").value("http://image.url"));
+            .andExpect(jsonPath("$.data.restaurantName").value("New Name"))
+            .andExpect(jsonPath("$.data.imageUrl").value("http://image.url"));
   }
 
   @Test
@@ -161,8 +161,8 @@ public class AdminRestaurantControllerTest {
             .content(objectMapper.writeValueAsString(menuItemRequest)))
             .andDo(print())
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.name").value("Tacos"))
-            .andExpect(jsonPath("$.imageUrl").value("http://image.url/taco"));
+            .andExpect(jsonPath("$.data.name").value("Tacos"))
+            .andExpect(jsonPath("$.data.imageUrl").value("http://image.url/taco"));
   }
 
   @Test
@@ -178,7 +178,7 @@ public class AdminRestaurantControllerTest {
             .content(objectMapper.writeValueAsString(menuItemRequest)))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.name").value("Tacos"));
+            .andExpect(jsonPath("$.data.name").value("Tacos"));
   }
 
   @Test
@@ -189,6 +189,6 @@ public class AdminRestaurantControllerTest {
     mockMvc.perform(delete("/api/admin/restaurants/" + restaurantId + "/menu/" + itemId)
             .header("Authorization", "Bearer fake-token"))
             .andDo(print())
-            .andExpect(status().isNoContent());
+            .andExpect(status().isOk());
   }
 }

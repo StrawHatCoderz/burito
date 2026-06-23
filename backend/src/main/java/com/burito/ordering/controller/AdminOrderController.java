@@ -61,7 +61,7 @@ public class AdminOrderController {
         List<Order> orders = orderService.getActiveOrders(restaurantId);
 
         List<OrderView> orderViews = orders.stream().map(OrderMapper::mapToView).collect(Collectors.toList());
-        return ResponseEntity.ok(orderViews);
+        return ResponseEntity.ok(APIResponse.success(orderViews));
     }
 
     @PutMapping("/{orderId}/status")
@@ -98,7 +98,7 @@ public class AdminOrderController {
         messagingTemplate.convertAndSendToUser(
                 customerEmail, "/queue/orders", statusEvent);
 
-        return ResponseEntity.ok(OrderMapper.mapToView(savedOrder));
+        return ResponseEntity.ok(APIResponse.success(OrderMapper.mapToView(savedOrder)));
     }
 
 }
