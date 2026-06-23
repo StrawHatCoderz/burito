@@ -32,6 +32,7 @@ export const QuantityStepper = ({
         size="small"
         onClick={onDecrement}
         disabled={isLoading}
+        aria-label="Decrease quantity"
         sx={{
           color: '#FF5A5F',
           padding: isSmall ? '2px' : '4px',

@@ -34,10 +34,16 @@ describe('RestaurantProfileForm', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument()
 
     await waitFor(() => {
+      expect(screen.getByText('Test Resto')).toBeInTheDocument()
+      expect(screen.getByText('Accepting Orders')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Edit Profile/i }))
+
+    await waitFor(() => {
       expect(screen.getByDisplayValue('Test Resto')).toBeInTheDocument()
       expect(screen.getByDisplayValue('40')).toBeInTheDocument()
       expect(screen.getByDisplayValue('http://test.com/img.jpg')).toBeInTheDocument()
-      expect(screen.getByText('Accepting Orders')).toBeInTheDocument()
     })
   })
 
@@ -47,6 +53,12 @@ describe('RestaurantProfileForm', () => {
     vi.mocked(updateAdminRestaurant).mockResolvedValue({ ...mockProfile, restaurantName: 'New Name' } as any)
 
     render(<RestaurantProfileForm />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Resto')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Edit Profile/i }))
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Test Resto')).toBeInTheDocument()

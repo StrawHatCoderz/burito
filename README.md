@@ -7,6 +7,23 @@ cp .env.example .env
 docker compose up --build
 ```
 
+## Developer Setup & Pre-Commit Hooks
+
+This project uses **Husky** to enforce pre-commit checks at the local workspace level before code can be committed or pushed.
+Every commit triggers:
+1. Backend checkstyle checks (`checkstyleMain` - warnings only).
+2. Backend full test suite (`./gradlew test`).
+3. Frontend full test suite (`npm run test`).
+
+If any test fails, the commit will be aborted.
+
+### Setup Instructions
+To set up the hooks locally, install the root dependencies from the workspace root directory:
+```bash
+npm install
+```
+This registers the local git hooks in `.husky/` so they run automatically on `git commit`.
+
 ## Required ports
 
 | Port | Service      |

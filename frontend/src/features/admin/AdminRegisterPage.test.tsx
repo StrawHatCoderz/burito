@@ -39,7 +39,7 @@ describe('AdminRegisterPage', () => {
 
   it('handles successful registration', async () => {
     vi.mocked(adminRegister).mockResolvedValue({ success: true })
-    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'test-token' })
+    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'test-token', refreshToken: 'test-refresh-token' })
     
     render(
       <MemoryRouter>
@@ -71,7 +71,7 @@ describe('AdminRegisterPage', () => {
         estDeliveryMinutes: 30
       })
       expect(adminLogin).toHaveBeenCalledWith({ email: 'admin@test.com', password: 'password123' })
-      expect(mockLogin).toHaveBeenCalledWith('test-token', true)
+      expect(mockLogin).toHaveBeenCalledWith('test-token', 'test-refresh-token', true)
       expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard')
     })
   })

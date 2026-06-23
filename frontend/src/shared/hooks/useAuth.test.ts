@@ -33,7 +33,7 @@ describe('useAuth', () => {
   it('is authenticated after login()', () => {
     const { result } = renderHook(() => useAuth(), { wrapper })
     act(() => {
-      result.current.login('customer-token')
+      result.current.login('customer-token', 'customer-refresh-token')
     })
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.token).toBe('customer-token')
@@ -44,7 +44,7 @@ describe('useAuth', () => {
   it('is not authenticated after logout()', () => {
     const { result } = renderHook(() => useAuth(), { wrapper })
     act(() => {
-      result.current.login('customer-token')
+      result.current.login('customer-token', 'customer-refresh-token')
     })
     act(() => {
       result.current.logout()
@@ -66,7 +66,7 @@ describe('useAuth', () => {
   it('login() as admin succeeds with correct role', () => {
     const { result } = renderHook(() => useAuth(), { wrapper })
     act(() => {
-      result.current.login('admin-token', true)
+      result.current.login('admin-token', 'admin-refresh-token', true)
     })
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.role).toBe('RESTAURANT_ADMIN')
@@ -76,7 +76,7 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth(), { wrapper })
     expect(() => {
       act(() => {
-        result.current.login('customer-token', true)
+        result.current.login('customer-token', 'customer-refresh-token', true)
       })
     }).toThrow('Unauthorized: Admin role required')
     expect(result.current.isAuthenticated).toBe(false)
@@ -86,7 +86,7 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth(), { wrapper })
     expect(() => {
       act(() => {
-        result.current.login('invalid-token')
+        result.current.login('invalid-token', 'invalid-refresh-token')
       })
     }).toThrow()
     expect(result.current.isAuthenticated).toBe(false)

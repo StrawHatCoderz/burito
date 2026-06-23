@@ -10,6 +10,8 @@ memory/
 # Frontend build artifacts and dependencies
 frontend/dist/
 frontend/node_modules/
+node_modules/
+*.log
 
 # Backend build artifacts
 backend/bin/

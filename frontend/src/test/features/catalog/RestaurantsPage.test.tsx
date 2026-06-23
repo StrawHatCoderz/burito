@@ -24,12 +24,17 @@ const mockRestaurant: Restaurant = {
   imageUrl: null,
 }
 
+import { AuthProvider } from '../../../shared/context/AuthContext'
+
 const renderPage = () =>
   render(
-    <MemoryRouter>
-      <RestaurantsPage />
-    </MemoryRouter>,
+    <AuthProvider>
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>
+    </AuthProvider>,
   )
+
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -41,15 +46,15 @@ describe('RestaurantsPage', () => {
     renderPage()
     expect(await screen.findByText('Spice Garden')).toBeInTheDocument()
     expect(screen.getByText('INDIAN')).toBeInTheDocument()
-    expect(screen.getByText('★ 4.5')).toBeInTheDocument()
+    expect(screen.getByText('4.5')).toBeInTheDocument()
     expect(screen.getByText('30 min')).toBeInTheDocument()
-    expect(screen.getByText('Open')).toBeInTheDocument()
+    expect(screen.getByText('OPEN')).toBeInTheDocument()
   })
 
   it('shows closed chip for closed restaurants', async () => {
     vi.mocked(catalogApi.fetchRestaurants).mockResolvedValue([{ ...mockRestaurant, open: false }])
     renderPage()
-    expect(await screen.findByText('Closed')).toBeInTheDocument()
+    expect(await screen.findByText('CLOSED')).toBeInTheDocument()
   })
 
   it('shows empty state when list is empty', async () => {
@@ -58,20 +63,22 @@ describe('RestaurantsPage', () => {
     expect(await screen.findByText('No restaurants found')).toBeInTheDocument()
   })
 
+
   it('shows error message when fetch fails', async () => {
     vi.mocked(catalogApi.fetchRestaurants).mockRejectedValue(new Error('Network error'))
     renderPage()
     expect(
-      await screen.findByText('Failed to load restaurants. Please try again.'),
+      await screen.findByText("We couldn't load the restaurants. Please try refreshing the page."),
     ).toBeInTheDocument()
   })
 
-  it('renders search input and cuisine dropdown', async () => {
+
+  it('renders search input and cuisine pills', async () => {
     vi.mocked(catalogApi.fetchRestaurants).mockResolvedValue([])
     renderPage()
     await screen.findByText('No restaurants found')
     expect(screen.getByRole('textbox')).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /🍛\s*Indian/i })).toBeInTheDocument()
   })
 
   it('calls fetchRestaurants with search param when input has value', async () => {
@@ -114,8 +121,7 @@ describe('RestaurantsPage', () => {
     await screen.findByText('No restaurants found')
     vi.mocked(catalogApi.fetchRestaurants).mockClear()
 
-    fireEvent.mouseDown(screen.getByRole('combobox'))
-    fireEvent.click(await screen.findByRole('option', { name: 'INDIAN' }))
+    fireEvent.click(screen.getByRole('button', { name: /🍛\s*Indian/i }))
 
     await waitFor(() => {
       expect(catalogApi.fetchRestaurants).toHaveBeenCalledWith(
@@ -123,4 +129,6 @@ describe('RestaurantsPage', () => {
       )
     })
   })
+
+
 })

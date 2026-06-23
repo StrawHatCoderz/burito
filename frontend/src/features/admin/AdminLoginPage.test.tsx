@@ -37,7 +37,7 @@ describe('AdminLoginPage', () => {
   })
 
   it('handles successful login', async () => {
-    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'admin-token' })
+    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'admin-token', refreshToken: 'admin-refresh-token' })
     
     render(
       <MemoryRouter>
@@ -52,7 +52,7 @@ describe('AdminLoginPage', () => {
     await waitFor(() => {
       expect(adminLogin).toHaveBeenCalledWith({ email: 'admin@test.com', password: 'password123' })
     })
-    expect(mockLogin).toHaveBeenCalledWith('admin-token', true)
+    expect(mockLogin).toHaveBeenCalledWith('admin-token', 'admin-refresh-token', true)
     expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard')
   })
 

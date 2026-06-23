@@ -41,7 +41,7 @@ const renderWithProvider = (items: MenuItem[]) =>
   render(
     <CartProvider>
       <CartStateViewer />
-      <MenuSection category="MAINS" items={items} />
+      <MenuSection category="MAINS" items={items} restaurantOpen={true} />
     </CartProvider>
   )
 
@@ -56,7 +56,7 @@ describe('MenuSection Add to Cart', () => {
     
     // Burger is available
     expect(screen.getByText('Burger')).toBeInTheDocument()
-    const addButtons = screen.getAllByRole('button', { name: '+ Add' })
+    const addButtons = screen.getAllByText('+ Add')
     expect(addButtons).toHaveLength(1)
     
     // Fries is unavailable
@@ -79,14 +79,14 @@ describe('MenuSection Add to Cart', () => {
 
     expect(screen.getByTestId('cart-state')).toHaveTextContent('Items: 0, Total: 0')
 
-    const addButton = screen.getByRole('button', { name: '+ Add' })
+    const addButton = screen.getByText('+ Add')
     await user.click(addButton)
 
     // Optimistic state updates immediately
     expect(screen.getByTestId('cart-state')).toHaveTextContent('Items: 1, Total: 150')
     
-    // Button shows Added state after API resolves
-    expect(await screen.findByRole('button', { name: 'Added ✓' })).toBeInTheDocument()
+    // Stepper shows after API resolves (verify by presence of Decrease quantity button)
+    expect(await screen.findByRole('button', { name: 'Decrease quantity' })).toBeInTheDocument()
     
     // State is synchronized
     expect(screen.getByTestId('cart-state')).toHaveTextContent('Items: 1, Total: 150')
@@ -94,13 +94,15 @@ describe('MenuSection Add to Cart', () => {
 
   it('rolls back optimistic state and shows a toast on failure', async () => {
     const user = userEvent.setup()
-    vi.mocked(cartApi.addToCart).mockRejectedValue(new Error('Network failure'))
+    vi.mocked(cartApi.addToCart).mockImplementation(
+      () => new Promise((_, reject) => setTimeout(() => reject(new Error('Network failure')), 10))
+    )
 
     renderWithProvider([mockMenuItem])
 
     expect(screen.getByTestId('cart-state')).toHaveTextContent('Items: 0, Total: 0')
 
-    const addButton = screen.getByRole('button', { name: '+ Add' })
+    const addButton = screen.getByText('+ Add')
     await user.click(addButton)
 
     // Optimistic update happens

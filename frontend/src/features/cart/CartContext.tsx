@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import type { CartState, CartView } from './types'
 import type { MenuItem } from '../catalog/types'
@@ -37,7 +37,7 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartState>(initialState)
-  const [snapshot, setSnapshot] = useState<CartState | null>(null)
+  const snapshotRef = useRef<CartState | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
   const openCartDrawer = useCallback(() => setIsCartOpen(true), [])
@@ -48,7 +48,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       ...cartView,
       cartItemCount: cartView.items.reduce((sum, item) => sum + item.quantity, 0),
     })
-    setSnapshot(null)
+    snapshotRef.current = null
   }, [])
 
   const refreshCart = useCallback(async () => {
@@ -69,7 +69,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const optimisticAdd = useCallback((menuItem: MenuItem) => {
     setCart((prev) => {
-      setSnapshot(prev) // Save snapshot exactly as it was before this update
+      snapshotRef.current = prev // Save snapshot exactly as it was before this update
 
       const existingItemIndex = prev.items.findIndex(
         (i) => i.menuItemId === menuItem.menuItemId
@@ -105,7 +105,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const optimisticDecrement = useCallback((cartItemId: string) => {
     setCart((prev) => {
-      setSnapshot(prev)
+      snapshotRef.current = prev
       const existingItemIndex = prev.items.findIndex(i => i.cartItemId === cartItemId)
       if (existingItemIndex < 0) return prev
 
@@ -137,7 +137,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const optimisticRemove = useCallback((cartItemId: string) => {
     setCart((prev) => {
-      setSnapshot(prev)
+      snapshotRef.current = prev
       const existingItemIndex = prev.items.findIndex(i => i.cartItemId === cartItemId)
       if (existingItemIndex < 0) return prev
 
@@ -155,7 +155,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const optimisticClear = useCallback(() => {
     setCart((prev) => {
-      setSnapshot(prev)
+      snapshotRef.current = prev
       return {
         ...prev,
         items: [],
@@ -167,14 +167,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const rollback = useCallback(() => {
     setCart((prev) => {
-      if (snapshot) {
-        const reverted = snapshot
-        setSnapshot(null)
+      if (snapshotRef.current) {
+        const reverted = snapshotRef.current
+        snapshotRef.current = null
         return reverted
       }
       return prev
     })
-  }, [snapshot])
+  }, [])
 
   return (
     <CartContext.Provider

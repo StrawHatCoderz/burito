@@ -8,22 +8,27 @@ beforeEach(() => {
   localStorage.clear()
 })
 
+import { AuthProvider } from '../shared/context/AuthContext'
+
 const renderWithRouter = (initialPath: string) =>
   render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <div>Protected content</div>
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/login" element={<div>Login page</div>} />
-      </Routes>
-    </MemoryRouter>,
+    <AuthProvider>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <div>Protected content</div>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<div>Login page</div>} />
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>,
   )
+
 
 describe('ProtectedRoute', () => {
   it('renders children when the user is authenticated', () => {

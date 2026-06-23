@@ -30,15 +30,23 @@ const mockMenuItem: MenuItem = {
   imageUrl: null,
 }
 
+import { AuthProvider } from '../../../shared/context/AuthContext'
+import { CartProvider } from '../../../features/cart/CartContext'
+
 const renderPage = (id = 'abc-123') =>
   render(
-    <MemoryRouter initialEntries={[`/restaurants/${id}`]}>
-      <Routes>
-        <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
-        <Route path="/restaurants" element={<div>Restaurants list</div>} />
-      </Routes>
-    </MemoryRouter>,
+    <AuthProvider>
+      <CartProvider>
+        <MemoryRouter initialEntries={[`/restaurants/${id}`]}>
+          <Routes>
+            <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
+            <Route path="/restaurants" element={<div>Restaurants list</div>} />
+          </Routes>
+        </MemoryRouter>
+      </CartProvider>
+    </AuthProvider>,
   )
+
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -53,9 +61,9 @@ describe('RestaurantDetailPage', () => {
     renderPage()
     expect(await screen.findByText('Spice Garden')).toBeInTheDocument()
     expect(screen.getByText('INDIAN')).toBeInTheDocument()
-    expect(screen.getByText('★ 4.5')).toBeInTheDocument()
+    expect(screen.getByText((_content, element) => element?.textContent === '★ 4.5')).toBeInTheDocument()
     expect(screen.getByText('Butter Chicken')).toBeInTheDocument()
-    expect(screen.getByText('Mains')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mains' })).toBeInTheDocument()
   })
 
   it('shows Unavailable chip for unavailable items', async () => {
@@ -73,7 +81,7 @@ describe('RestaurantDetailPage', () => {
       menuItems: [],
     })
     renderPage()
-    expect(await screen.findByText('No menu available yet')).toBeInTheDocument()
+    expect(await screen.findByText('Menu is currently unavailable.')).toBeInTheDocument()
   })
 
   it('shows restaurant not found for 404 errors', async () => {
@@ -87,7 +95,7 @@ describe('RestaurantDetailPage', () => {
     vi.mocked(catalogApi.fetchRestaurantWithMenu).mockRejectedValue(new Error('Network error'))
     renderPage()
     expect(
-      await screen.findByText('Something went wrong. Please try again.'),
+      await screen.findByText('Unable to load menu'),
     ).toBeInTheDocument()
     expect(screen.getByText('Back to restaurants')).toBeInTheDocument()
   })
