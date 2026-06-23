@@ -29,51 +29,79 @@ If any of these are missing, ask the orchestrator to provide them before proceed
 
 ---
 
-## Step 1 — Announce
+## Step 1 — Announce and Prepare
 
 State clearly what you are about to do:
 
 > "Starting **Task \<N\> / \<Total\>: \<Title\>**.
 > Approach: [one sentence describing the implementation strategy]."
 
+**Load the coding-standards skill now:**
+
+> **Load:** `skills/coding-standards/SKILL.md`
+> Run the **Pre-Implementation Checklist** against the files you are about to touch.
+> Read the actual source of every file you will depend on — verify method signatures,
+> return types, field types, and annotations. Do not proceed on assumptions.
+
+If the pre-implementation checklist surfaces architectural issues in the existing code
+(e.g., a layer violation you would need to perpetuate), flag it to the user before
+writing any code.
+
 ---
 
-## Step 2 — Implement
+## Step 2 — Implement and Test Together
 
-- Write the implementation code
+This is a single step. Implementation and tests are written **together**, not
+sequentially. For each unit of logic:
+
+1. **Read** the source files you depend on — verify interfaces, types, signatures
+2. **Write** the production code for that unit
+3. **Write** the test(s) for that unit immediately — before moving to the next unit
+4. **Run** the tests to confirm they pass
+
+Repeat for each unit of logic in the task. Do not write all production code first
+and then write all tests afterward — that defeats the purpose.
+
+Additional rules:
 - Follow the code style, naming conventions, and patterns observed in Phase 0
 - Touch **only** the files relevant to this task — no opportunistic refactors
 - Add inline comments for any non-obvious logic
-- Reference the task's "Files Likely Affected" list as a starting point, but use
-  your own judgement if the actual scope differs — note any deviations
-
----
-
-## Step 3 — Write Tests
-
-Write tests **as part of this step**, not after commit.
-
 - Cover every acceptance criterion listed in the task definition
 - Cover the edge cases specified in the task's test requirements
 - Follow the existing test framework, file naming, and assertion conventions
-- Place test files where the project convention dictates (co-located or in a
-  dedicated `tests/` directory)
 
 ---
 
-## Step 4 — Run Tests
+## Step 3 — Run Full Test Suite
 
 ```bash
 # Adapt to the project's tooling:
-# npm test | pytest | go test ./... | mvn test | bundle exec rspec | etc.
+# npm test | pytest | go test ./... | mvn test | ./gradlew test | etc.
 ```
 
 Rules:
-- All tests must be **green** before requesting review — no exceptions
+- All tests must be **green** before proceeding — no exceptions
 - If tests fail: fix the code or tests, then re-run; do not skip ahead
 - If a **pre-existing, unrelated** test is already failing, call it out explicitly:
   > "Note: `<test name>` was already failing before this task and is unrelated to
   > these changes."
+
+---
+
+## Step 4 — Quality Gate
+
+**Before presenting for review**, run the **Pre-Commit Quality Gate** from the
+`coding-standards` skill against all code you have written or modified in this task.
+
+Specifically verify:
+- **Architecture**: No layer violations, no circular dependencies, no misplaced logic
+- **Consistency**: Response format, error handling, and types match established patterns
+- **Test quality**: Coverage verified with the project's coverage tool (e.g., JaCoCo),
+  edge cases covered, assertions are specific
+- **Hygiene**: No dead code, no unused imports, no duplicated logic
+
+If any item fails, fix it before proceeding. Do not present code with known quality
+issues and hope the reviewer doesn't notice.
 
 ---
 
@@ -84,7 +112,8 @@ Show the user all of the following:
 1. **Summary** — what was changed and why, in plain language
 2. **Diff / changed files** — key file paths and the nature of each change
 3. **Test results** — pass count, and any notable coverage additions
-4. **Acceptance criteria checklist** — every criterion from the task, ticked off:
+4. **Quality gate** — confirm all checks passed, or note any items that required fixing
+5. **Acceptance criteria checklist** — every criterion from the task, ticked off:
    ```
    - [x] Criterion 1
    - [x] Criterion 2
@@ -102,8 +131,9 @@ For each round of feedback:
 
 1. Apply the requested changes
 2. Re-run the full test suite
-3. Re-present for review (Steps 4–5)
-4. Repeat until the user replies **Approved**
+3. Re-run the quality gate
+4. Re-present for review (Steps 3–5)
+5. Repeat until the user replies **Approved**
 
 If the feedback implies a problem that cannot be resolved within this task's scope —
 for example, a missing design decision, a conflict with another module, or a required
@@ -121,7 +151,7 @@ orchestrator:
 
 ## Step 7 — Commit
 
-Once the user approves and all tests pass:
+Once the user approves, all tests pass, and the quality gate is clean:
 
 ```bash
 git add <relevant files>
