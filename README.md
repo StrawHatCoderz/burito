@@ -9,13 +9,37 @@ docker compose up --build
 
 ## Developer Setup & Pre-Commit Hooks
 
-This project uses **Husky** to enforce pre-commit checks at the local workspace level before code can be committed or pushed.
+This project uses **Husky** to enforce local pre-commit quality checks and commit message formatting before code can be committed.
+
+### Local Quality Checks (Pre-Commit Hook)
 Every commit triggers:
 1. Backend checkstyle checks (`checkstyleMain` - warnings only).
 2. Backend full test suite (`./gradlew test`).
 3. Frontend full test suite (`npm run test`).
 
-If any test fails, the commit will be aborted.
+If any check or test fails, the commit will be aborted.
+
+### Commit Message Formatting (Commit Message Hook)
+Commit messages must adhere to a strict structured format:
+```
+| <story-id> | <type> | <subject>
+
+* <description point 1>
+* <description point 2>
+```
+
+- **`<story-id>`**: Must be in format `<PROJECT>-<NUMBER>` (e.g. `BR-701`).
+- **`<type>`**: Must be one of: `feat`, `chore`, `refactor`, `fix`, `docs`, `test`, `style`, `ci`.
+- **`<subject>`**: Must start with a lowercase verb in third-person present tense (ending in `s`, e.g. `adds`, `creates`, `fixes`).
+- **Description Points**: Any subsequent lines after the subject line must be blank or start with `* ` (bulleted points).
+
+Example:
+```
+| BR-701 | chore | adds commit message format hook
+
+* adds husky commit-msg hook
+* validates story id and verb tense
+```
 
 ### Setup Instructions
 To set up the hooks locally, install the root dependencies from the workspace root directory:
