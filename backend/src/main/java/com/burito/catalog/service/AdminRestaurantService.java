@@ -6,9 +6,10 @@ import com.burito.catalog.domain.Restaurant;
 import com.burito.catalog.exceptions.RestaurantNotFoundException;
 import com.burito.catalog.repository.RestaurantRepo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.burito.core.exceptions.ForbiddenException;
+import com.burito.core.exceptions.ResourceNotFoundException;
 
 import java.util.UUID;
 
@@ -25,11 +26,11 @@ public class AdminRestaurantService {
 
   public Restaurant updateRestaurant(UUID restaurantId, String tokenRestaurantId, UpdateRestaurantRequest request) {
     if (tokenRestaurantId == null || !tokenRestaurantId.equals(restaurantId.toString())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. You can only update your own restaurant.");
+      throw new ForbiddenException("Access denied. You can only update your own restaurant.");
     }
 
     Restaurant restaurant = restaurantRepo.findById(restaurantId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
 
     boolean openChanged = restaurant.isOpen() != request.isOpen();
 
@@ -67,11 +68,11 @@ public class AdminRestaurantService {
 
   public Restaurant getRestaurant(UUID restaurantId, String tokenRestaurantId) {
     if (tokenRestaurantId == null || !tokenRestaurantId.equals(restaurantId.toString())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. You can only view your own restaurant.");
+      throw new ForbiddenException("Access denied. You can only view your own restaurant.");
     }
 
     return restaurantRepo.findById(restaurantId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
   }
 }
 

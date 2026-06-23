@@ -6,10 +6,12 @@ import com.burito.catalog.domain.MenuItem;
 import com.burito.catalog.domain.Restaurant;
 import com.burito.catalog.repository.MenuItemRepo;
 import com.burito.catalog.repository.RestaurantRepo;
-import org.springframework.http.HttpStatus;
+import com.burito.core.exceptions.BadRequestException;
+import com.burito.core.exceptions.ForbiddenException;
+import com.burito.core.exceptions.ResourceNotFoundException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -28,7 +30,7 @@ public class AdminMenuService {
 
     private void validateOwnership(UUID restaurantId, String tokenRestaurantId) {
         if (tokenRestaurantId == null || !tokenRestaurantId.equals(restaurantId.toString())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. You can only manage menu items for your own restaurant.");
+            throw new ForbiddenException("Access denied. You can only manage menu items for your own restaurant.");
         }
     }
 
@@ -40,7 +42,7 @@ public class AdminMenuService {
         validateOwnership(restaurantId, tokenRestaurantId);
 
         Restaurant restaurant = restaurantRepo.findById(restaurantId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
 
         MenuItem item = new MenuItem();
         item.setName(request.name());
@@ -60,10 +62,10 @@ public class AdminMenuService {
         validateOwnership(restaurantId, tokenRestaurantId);
 
         MenuItem item = menuItemRepo.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Menu item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found"));
 
         if (!item.getRestaurant().getRestaurantId().equals(restaurantId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Menu item does not belong to the specified restaurant");
+            throw new BadRequestException("Menu item does not belong to the specified restaurant");
         }
 
         boolean availabilityChanged = item.isAvailable() != request.isAvailable();
@@ -90,10 +92,10 @@ public class AdminMenuService {
         validateOwnership(restaurantId, tokenRestaurantId);
 
         MenuItem item = menuItemRepo.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Menu item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found"));
 
         if (!item.getRestaurant().getRestaurantId().equals(restaurantId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Menu item does not belong to the specified restaurant");
+            throw new BadRequestException("Menu item does not belong to the specified restaurant");
         }
 
         menuItemRepo.delete(item);

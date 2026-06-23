@@ -31,4 +31,11 @@ public class GlobalExceptionHandler {
                     "Invalid ID format: " + e.getValue()
             )));
   }
+
+  @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+  public ResponseEntity<APIResponse<Void>> handleBadRequestExceptions(RuntimeException e) {
+    log.warn("Bad Request Exception: {}", e.getMessage());
+    return ResponseEntity.badRequest()
+            .body(APIResponse.error(new ApiError(ErrorCode.BAD_REQUEST, e.getMessage())));
+  }
 }

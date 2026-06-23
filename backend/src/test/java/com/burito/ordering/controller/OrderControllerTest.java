@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import com.burito.core.controller.views.APIResponse;
+import com.burito.core.exceptions.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -57,7 +60,7 @@ class OrderControllerTest {
         ResponseEntity<?> response = orderController.getActiveOrder(userDetails);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(view, response.getBody());
+        assertEquals(view, ((APIResponse<?>) response.getBody()).data());
     }
 
     @Test
@@ -72,8 +75,6 @@ class OrderControllerTest {
         when(userService.findUserByEmail("test@test.com")).thenReturn(user);
         when(orderService.getActiveOrder(user.getUserId())).thenReturn(null);
 
-        ResponseEntity<?> response = orderController.getActiveOrder(userDetails);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertThrows(ResourceNotFoundException.class, () -> orderController.getActiveOrder(userDetails));
     }
 }

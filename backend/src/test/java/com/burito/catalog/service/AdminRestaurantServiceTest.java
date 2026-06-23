@@ -6,7 +6,8 @@ import com.burito.catalog.domain.Restaurant;
 import com.burito.catalog.enums.CuisineType;
 import com.burito.catalog.exceptions.RestaurantNotFoundException;
 import com.burito.catalog.repository.RestaurantRepo;
-import org.springframework.web.server.ResponseStatusException;
+import com.burito.core.exceptions.ForbiddenException;
+import com.burito.core.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,11 +69,8 @@ public class AdminRestaurantServiceTest {
     String tokenRestaurantId = UUID.randomUUID().toString(); // different id
     UpdateRestaurantRequest request = new UpdateRestaurantRequest("New Name", CuisineType.ITALIAN, 45, true, "http://image.url");
 
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> 
-      adminRestaurantService.updateRestaurant(restaurantId, tokenRestaurantId, request)
-    );
-
-    assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+    assertThrows(ForbiddenException.class, () -> 
+        adminRestaurantService.updateRestaurant(restaurantId, "different-id", request));
     verify(restaurantRepo, never()).findById(any());
     verify(restaurantRepo, never()).save(any());
   }
@@ -84,11 +82,8 @@ public class AdminRestaurantServiceTest {
 
     when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.empty());
 
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> 
-      adminRestaurantService.updateRestaurant(restaurantId, tokenRestaurantId, request)
-    );
-
-    assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    assertThrows(ResourceNotFoundException.class, () -> 
+        adminRestaurantService.updateRestaurant(restaurantId, tokenRestaurantId, request));
     verify(restaurantRepo, never()).save(any());
   }
 
@@ -106,13 +101,9 @@ public class AdminRestaurantServiceTest {
 
   @Test
   void getRestaurant_forbidden_whenIdsMismatch() {
-    String tokenRestaurantId = UUID.randomUUID().toString(); // different id
-
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> 
-      adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId)
-    );
-
-    assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+    String tokenRestaurantId = UUID.randomUUID().toString(); // different 
+    assertThrows(ForbiddenException.class, () -> 
+        adminRestaurantService.getRestaurant(restaurantId, "different-id"));
     verify(restaurantRepo, never()).findById(any());
   }
 
@@ -122,10 +113,7 @@ public class AdminRestaurantServiceTest {
 
     when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.empty());
 
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> 
-      adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId)
-    );
-
-    assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    assertThrows(ResourceNotFoundException.class, () -> 
+        adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId));
   }
 }

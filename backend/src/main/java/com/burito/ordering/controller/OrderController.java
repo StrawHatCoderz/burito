@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.burito.core.exceptions.UnauthorizedException;
+import com.burito.core.exceptions.ResourceNotFoundException;
 import java.util.Map;
 
 @RestController
@@ -35,38 +37,34 @@ public class OrderController {
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            throw new UnauthorizedException("Unauthorized");
         }
 
-        try {
-            User user = userService.findUserByEmail(userDetails.getUsername());
-            if (user == null) {
-                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-            }
-
-            Order order = orderService.checkout(user.getUserId());
-            return ResponseEntity.ok(Map.of("orderId", order.getId(), "status", order.getStatus()));
-        } catch (IllegalStateException | IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        User user = userService.findUserByEmail(userDetails.getUsername());
+        if (user == null) {
+            throw new UnauthorizedException("Unauthorized");
         }
+
+        Order order = orderService.checkout(user.getUserId());
+        return ResponseEntity.ok(APIResponse.success(Map.of("orderId", order.getId(), "status", order.getStatus())));
     }
 
     @GetMapping("/active")
     public ResponseEntity<?> getActiveOrder(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            throw new UnauthorizedException("Unauthorized");
         }
 
         User user = userService.findUserByEmail(userDetails.getUsername());
         if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            throw new UnauthorizedException("Unauthorized");
         }
 
         var activeOrder = orderService.getActiveOrder(user.getUserId());
         if (activeOrder == null) {
-            return ResponseEntity.status(404).body(Map.of("error", "No active order found"));
+            throw new ResourceNotFoundException("No active order found");
         }
 
-        return ResponseEntity.ok(activeOrder);
+        return ResponseEntity.ok(APIResponse.success(activeOrder));
     }
 }

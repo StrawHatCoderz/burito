@@ -17,6 +17,9 @@ import com.burito.ordering.enums.OrderStatus;
 import com.burito.ordering.service.OrderService;
 import com.burito.catalog.service.RestaurantService;
 import com.burito.identity.service.UserService;
+import com.burito.core.exceptions.UnauthorizedException;
+import com.burito.core.exceptions.ForbiddenException;
+import com.burito.core.exceptions.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,11 +53,11 @@ public class AdminOrderController {
     public ResponseEntity<?> getActiveOrders(@AuthenticationPrincipal UserDetails userDetails) {
         User admin = userService.findUserByEmail(userDetails.getUsername());
         if (admin == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            throw new UnauthorizedException("Unauthorized");
         }
         UUID restaurantId = restaurantService.getRestaurantIdByOwnerId(admin.getUserId());
         if (restaurantId == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Restaurant not found for admin"));
+            throw new BadRequestException("Restaurant not found for admin");
         }
 
         List<Order> orders = orderService.getActiveOrders(restaurantId);
@@ -71,39 +74,33 @@ public class AdminOrderController {
 
         User admin = userService.findUserByEmail(userDetails.getUsername());
         if (admin == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            throw new UnauthorizedException("Unauthorized");
         }
         UUID adminRestaurantId = restaurantService.getRestaurantIdByOwnerId(admin.getUserId());
 
-        try {
-            OrderStatus newStatus = OrderStatus.valueOf(payload.get("status").toUpperCase());
-            Order savedOrder = orderService.updateOrderStatus(orderId, adminRestaurantId, newStatus);
+        OrderStatus newStatus = OrderStatus.valueOf(payload.get("status").toUpperCase());
+        Order savedOrder = orderService.updateOrderStatus(orderId, adminRestaurantId, newStatus);
 
-            String customerId = savedOrder.getCustomer().getUserId().toString();
-            String restaurantId = savedOrder.getRestaurant().getRestaurantId().toString();
+        String customerId = savedOrder.getCustomer().getUserId().toString();
+        String restaurantId = savedOrder.getRestaurant().getRestaurantId().toString();
 
-            OrderStatusEvent statusEvent = new OrderStatusEvent(
-                    savedOrder.getId().toString(),
-                    customerId,
-                    newStatus,
-                    restaurantId
-            );
+        OrderStatusEvent statusEvent = new OrderStatusEvent(
+                savedOrder.getId().toString(),
+                customerId,
+                newStatus,
+                restaurantId
+        );
 
-            // Notify all admin sessions for this restaurant (multi-tab sync)
-            messagingTemplate.convertAndSend(
-                    "/topic/restaurant/" + restaurantId + "/order-status", statusEvent);
+        // Notify all admin sessions for this restaurant (multi-tab sync)
+        messagingTemplate.convertAndSend(
+                "/topic/restaurant/" + restaurantId + "/order-status", statusEvent);
 
-            // Notify the specific customer who placed the order
-            String customerEmail = savedOrder.getCustomer().getEmail();
-            messagingTemplate.convertAndSendToUser(
-                    customerEmail, "/queue/orders", statusEvent);
+        // Notify the specific customer who placed the order
+        String customerEmail = savedOrder.getCustomer().getEmail();
+        messagingTemplate.convertAndSendToUser(
+                customerEmail, "/queue/orders", statusEvent);
 
-            return ResponseEntity.ok(OrderMapper.mapToView(savedOrder));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status or order not found"));
-        }
+        return ResponseEntity.ok(OrderMapper.mapToView(savedOrder));
     }
 
 }
