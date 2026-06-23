@@ -10,7 +10,7 @@ import com.burito.ordering.repository.CartItemRepo;
 import com.burito.ordering.repository.CartRepo;
 import com.burito.ordering.repository.OrderRepo;
 import com.burito.identity.service.UserService;
-import com.burito.ordering.controller.AdminOrderController;
+import com.burito.ordering.utils.OrderMapper;
 import com.burito.ordering.controller.views.OrderView;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -85,7 +85,7 @@ public class OrderService {
         cart.setStatus(CartStatus.EXPIRED);
         cartRepo.save(cart);
 
-        OrderView view = AdminOrderController.mapToView(savedOrder);
+        OrderView view = OrderMapper.mapToView(savedOrder);
         messagingTemplate.convertAndSend("/topic/restaurant/" + cart.getRestaurant().getRestaurantId() + "/orders", view);
 
         return savedOrder;
@@ -102,7 +102,7 @@ public class OrderService {
             return null;
         }
         
-        return AdminOrderController.mapToView(activeOrder);
+        return OrderMapper.mapToView(activeOrder);
     }
 
     @Transactional(readOnly = true)

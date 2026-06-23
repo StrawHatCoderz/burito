@@ -9,6 +9,7 @@ import com.burito.core.controller.views.ApiError;
 import com.burito.ordering.controller.views.OrderItemView;
 import com.burito.ordering.controller.views.OrderStatusEvent;
 import com.burito.ordering.controller.views.OrderView;
+import com.burito.ordering.utils.OrderMapper;
 import com.burito.ordering.domain.Order;
 import com.burito.catalog.domain.Restaurant;
 import com.burito.identity.domain.User;
@@ -58,7 +59,7 @@ public class AdminOrderController {
 
         List<Order> orders = orderService.getActiveOrders(restaurantId);
 
-        List<OrderView> orderViews = orders.stream().map(AdminOrderController::mapToView).collect(Collectors.toList());
+        List<OrderView> orderViews = orders.stream().map(OrderMapper::mapToView).collect(Collectors.toList());
         return ResponseEntity.ok(orderViews);
     }
 
@@ -97,7 +98,7 @@ public class AdminOrderController {
             messagingTemplate.convertAndSendToUser(
                     customerEmail, "/queue/orders", statusEvent);
 
-            return ResponseEntity.ok(mapToView(savedOrder));
+            return ResponseEntity.ok(OrderMapper.mapToView(savedOrder));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -105,26 +106,5 @@ public class AdminOrderController {
         }
     }
 
-    public static OrderView mapToView(Order order) {
-        List<OrderItemView> itemViews = order.getItems().stream()
-                .map(item -> new OrderItemView(
-                        item.getId(),
-                        item.getMenuItemId(),
-                        item.getName(),
-                        item.getPriceAtCheckout(),
-                        item.getQuantity()))
-                .collect(Collectors.toList());
-
-        return new OrderView(
-                order.getId(),
-                order.getCustomer().getUserId(),
-                order.getCustomer().getFullName() != null ? order.getCustomer().getFullName() : order.getCustomer().getEmail(),
-                order.getRestaurant().getRestaurantId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                order.getCreatedAt(),
-                itemViews
-        );
-    }
 }
 
