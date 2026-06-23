@@ -13,8 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import com.burito.core.exceptions.ForbiddenException;
-import com.burito.core.exceptions.ResourceNotFoundException;
+import com.burito.core.exceptions.APIException;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -77,8 +76,9 @@ public class AdminMenuServiceTest {
 
     @Test
     void createMenuItem_Forbidden() {
-        assertThrows(ForbiddenException.class, () -> 
+        APIException ex = assertThrows(APIException.class, () -> 
             adminMenuService.createMenuItem(restaurantId, "different-id", request));
+        assertEquals(com.burito.core.enums.ErrorCode.FORBIDDEN, ex.getErrorCode());
             
         verify(menuItemRepo, never()).save(any());
     }

@@ -6,8 +6,7 @@ import com.burito.catalog.domain.Restaurant;
 import com.burito.catalog.enums.CuisineType;
 import com.burito.catalog.exceptions.RestaurantNotFoundException;
 import com.burito.catalog.repository.RestaurantRepo;
-import com.burito.core.exceptions.ForbiddenException;
-import com.burito.core.exceptions.ResourceNotFoundException;
+import com.burito.core.exceptions.APIException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,8 +68,9 @@ public class AdminRestaurantServiceTest {
     String tokenRestaurantId = UUID.randomUUID().toString(); // different id
     UpdateRestaurantRequest request = new UpdateRestaurantRequest("New Name", CuisineType.ITALIAN, 45, true, "http://image.url");
 
-    assertThrows(ForbiddenException.class, () -> 
+    APIException ex = assertThrows(APIException.class, () -> 
         adminRestaurantService.updateRestaurant(restaurantId, "different-id", request));
+    assertEquals(com.burito.core.enums.ErrorCode.FORBIDDEN, ex.getErrorCode());
     verify(restaurantRepo, never()).findById(any());
     verify(restaurantRepo, never()).save(any());
   }
@@ -82,8 +82,9 @@ public class AdminRestaurantServiceTest {
 
     when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class, () -> 
+    APIException ex = assertThrows(APIException.class, () -> 
         adminRestaurantService.updateRestaurant(restaurantId, tokenRestaurantId, request));
+    assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
     verify(restaurantRepo, never()).save(any());
   }
 
@@ -102,8 +103,9 @@ public class AdminRestaurantServiceTest {
   @Test
   void getRestaurant_forbidden_whenIdsMismatch() {
     String tokenRestaurantId = UUID.randomUUID().toString(); // different 
-    assertThrows(ForbiddenException.class, () -> 
+    APIException ex = assertThrows(APIException.class, () -> 
         adminRestaurantService.getRestaurant(restaurantId, "different-id"));
+    assertEquals(com.burito.core.enums.ErrorCode.FORBIDDEN, ex.getErrorCode());
     verify(restaurantRepo, never()).findById(any());
   }
 
@@ -113,7 +115,8 @@ public class AdminRestaurantServiceTest {
 
     when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class, () -> 
+    APIException ex = assertThrows(APIException.class, () -> 
         adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId));
+    assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
   }
 }

@@ -11,7 +11,7 @@ import com.burito.core.controller.views.ApiError;
 import com.burito.identity.controller.views.UserProfileView;
 import com.burito.identity.domain.User;
 import com.burito.identity.service.AuthService;
-import com.burito.core.exceptions.UnauthorizedException;
+import com.burito.core.exceptions.APIException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,7 +47,7 @@ public class UserController {
           @AuthenticationPrincipal UserDetails userDetails) {
     User user = authService.getCurrentUser(userDetails.getUsername());
     if (user == null) {
-      throw new UnauthorizedException("User not found or token invalid");
+      throw APIException.unauthorized();
     }
     return ResponseEntity.ok(APIResponse.success(
             new UserProfileView(user.getUserId(), user.getEmail(), user.getFullName(), user.getCreatedAt())

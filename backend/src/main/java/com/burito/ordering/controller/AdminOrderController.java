@@ -17,9 +17,7 @@ import com.burito.ordering.enums.OrderStatus;
 import com.burito.ordering.service.OrderService;
 import com.burito.catalog.service.RestaurantService;
 import com.burito.identity.service.UserService;
-import com.burito.core.exceptions.UnauthorizedException;
-import com.burito.core.exceptions.ForbiddenException;
-import com.burito.core.exceptions.BadRequestException;
+import com.burito.core.exceptions.APIException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,11 +51,11 @@ public class AdminOrderController {
     public ResponseEntity<?> getActiveOrders(@AuthenticationPrincipal UserDetails userDetails) {
         User admin = userService.findUserByEmail(userDetails.getUsername());
         if (admin == null) {
-            throw new UnauthorizedException("Unauthorized");
+            throw APIException.unauthorized();
         }
         UUID restaurantId = restaurantService.getRestaurantIdByOwnerId(admin.getUserId());
         if (restaurantId == null) {
-            throw new BadRequestException("Restaurant not found for admin");
+            throw APIException.badRequest("Restaurant not found for admin");
         }
 
         List<Order> orders = orderService.getActiveOrders(restaurantId);
@@ -74,7 +72,7 @@ public class AdminOrderController {
 
         User admin = userService.findUserByEmail(userDetails.getUsername());
         if (admin == null) {
-            throw new UnauthorizedException("Unauthorized");
+            throw APIException.unauthorized();
         }
         UUID adminRestaurantId = restaurantService.getRestaurantIdByOwnerId(admin.getUserId());
 

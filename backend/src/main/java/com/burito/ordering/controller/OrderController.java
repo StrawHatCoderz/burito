@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.burito.core.exceptions.UnauthorizedException;
-import com.burito.core.exceptions.ResourceNotFoundException;
+import com.burito.core.exceptions.APIException;
 import java.util.Map;
 
 @RestController
@@ -37,12 +36,12 @@ public class OrderController {
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            throw new UnauthorizedException("Unauthorized");
+            throw APIException.unauthorized();
         }
 
         User user = userService.findUserByEmail(userDetails.getUsername());
         if (user == null) {
-            throw new UnauthorizedException("Unauthorized");
+            throw APIException.unauthorized();
         }
 
         Order order = orderService.checkout(user.getUserId());
@@ -52,17 +51,17 @@ public class OrderController {
     @GetMapping("/active")
     public ResponseEntity<?> getActiveOrder(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            throw new UnauthorizedException("Unauthorized");
+            throw APIException.unauthorized();
         }
 
         User user = userService.findUserByEmail(userDetails.getUsername());
         if (user == null) {
-            throw new UnauthorizedException("Unauthorized");
+            throw APIException.unauthorized();
         }
 
         var activeOrder = orderService.getActiveOrder(user.getUserId());
         if (activeOrder == null) {
-            throw new ResourceNotFoundException("No active order found");
+            throw APIException.notFound("No active order found");
         }
 
         return ResponseEntity.ok(APIResponse.success(activeOrder));

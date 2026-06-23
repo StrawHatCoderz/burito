@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import com.burito.core.controller.views.APIResponse;
-import com.burito.core.exceptions.ResourceNotFoundException;
+import com.burito.core.exceptions.APIException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -75,6 +75,7 @@ class OrderControllerTest {
         when(userService.findUserByEmail("test@test.com")).thenReturn(user);
         when(orderService.getActiveOrder(user.getUserId())).thenReturn(null);
 
-        assertThrows(ResourceNotFoundException.class, () -> orderController.getActiveOrder(userDetails));
+        APIException ex = assertThrows(APIException.class, () -> orderController.getActiveOrder(userDetails));
+        assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
     }
 }

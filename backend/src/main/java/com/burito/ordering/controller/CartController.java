@@ -12,7 +12,6 @@ import com.burito.ordering.controller.views.CartItemRequest;
 import com.burito.ordering.controller.views.CartView;
 import com.burito.identity.domain.User;
 import com.burito.core.exceptions.APIException;
-import com.burito.core.exceptions.UnauthorizedException;
 import com.burito.identity.service.AuthService;
 import com.burito.ordering.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,13 +68,13 @@ public class CartController {
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
       if (user == null) {
-        throw new UnauthorizedException("Unauthorized");
+        throw APIException.unauthorized();
       }
       userId = user.getUserId();
     }
 
     if (userId == null && guestId == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
 
     CartView cartView = cartService.addItem(userId, guestId, request.menuItemId(), request.quantity());
@@ -92,13 +91,13 @@ public class CartController {
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
       if (user == null) {
-        throw new UnauthorizedException("Unauthorized");
+        throw APIException.unauthorized();
       }
       userId = user.getUserId();
     }
 
     if (userId == null && guestId == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
 
     CartView cartView = cartService.getCart(userId, guestId);
@@ -112,11 +111,11 @@ public class CartController {
       @RequestHeader(value = "X-Guest-Id", required = true) UUID guestId) throws APIException {
 
     if (userDetails == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
     User user = authService.getCurrentUser(userDetails.getUsername());
     if (user == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
     cartService.mergeCart(user.getUserId(), guestId);
     return ResponseEntity.ok(APIResponse.success(null));
@@ -133,13 +132,13 @@ public class CartController {
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
       if (user == null) {
-        throw new UnauthorizedException("Unauthorized");
+        throw APIException.unauthorized();
       }
       userId = user.getUserId();
     }
 
     if (userId == null && guestId == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
 
     CartView cartView = cartService.removeItem(userId, guestId, cartItemId);
@@ -157,13 +156,13 @@ public class CartController {
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
       if (user == null) {
-        throw new UnauthorizedException("Unauthorized");
+        throw APIException.unauthorized();
       }
       userId = user.getUserId();
     }
 
     if (userId == null && guestId == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
 
     CartView cartView = cartService.decrementItem(userId, guestId, cartItemId);
@@ -180,13 +179,13 @@ public class CartController {
     if (userDetails != null) {
       User user = authService.getCurrentUser(userDetails.getUsername());
       if (user == null) {
-        throw new UnauthorizedException("Unauthorized");
+        throw APIException.unauthorized();
       }
       userId = user.getUserId();
     }
 
     if (userId == null && guestId == null) {
-      throw new UnauthorizedException("Unauthorized");
+      throw APIException.unauthorized();
     }
 
     CartView cartView = cartService.clearCart(userId, guestId);
