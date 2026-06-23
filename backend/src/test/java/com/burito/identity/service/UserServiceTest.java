@@ -55,4 +55,32 @@ class UserServiceTest {
     assertThrows(UsernameNotFoundException.class,
             () -> userService.loadUserByUsername("nobody@test.com"));
   }
+
+  @Test
+  void findUserByEmail_shouldReturnUser() {
+    User user = new User();
+    when(userRepo.findUserByEmail("wade@test.com")).thenReturn(user);
+
+    User result = userService.findUserByEmail("wade@test.com");
+    assertEquals(user, result);
+  }
+
+  @Test
+  void findUserById_shouldReturnUser() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User();
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    User result = userService.findUserById(id);
+    assertEquals(user, result);
+  }
+
+  @Test
+  void findUserById_shouldReturnNullWhenNotFound() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.empty());
+
+    User result = userService.findUserById(id);
+    assertNull(result);
+  }
 }

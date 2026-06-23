@@ -119,4 +119,18 @@ public class AdminRestaurantServiceTest {
         adminRestaurantService.getRestaurant(restaurantId, tokenRestaurantId));
     assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
   }
+
+  @Test
+  void updateRestaurant_WithNullFields() {
+    String tokenRestaurantId = restaurantId.toString();
+    UpdateRestaurantRequest nullReq = new UpdateRestaurantRequest(null, null, 0, false, null);
+
+    when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+    when(restaurantRepo.save(any(Restaurant.class))).thenAnswer(i -> i.getArguments()[0]);
+
+    Restaurant updated = adminRestaurantService.updateRestaurant(restaurantId, tokenRestaurantId, nullReq);
+
+    assertEquals("Old Name", updated.getRestaurantName());
+    assertEquals(CuisineType.AMERICAN, updated.getCuisineType());
+  }
 }

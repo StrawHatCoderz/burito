@@ -101,6 +101,14 @@ public class AdminMenuServiceTest {
     }
 
     @Test
+    void createMenuItem_NotFound() {
+        when(restaurantRepo.findById(restaurantId)).thenReturn(Optional.empty());
+        APIException ex = assertThrows(APIException.class, () -> 
+            adminMenuService.createMenuItem(restaurantId, tokenRestaurantId, request));
+        assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
     void deleteMenuItem_Success() {
         MenuItem existingItem = new MenuItem();
         existingItem.setMenuItemId(itemId);
@@ -111,5 +119,70 @@ public class AdminMenuServiceTest {
         adminMenuService.deleteMenuItem(restaurantId, itemId, tokenRestaurantId);
 
         verify(menuItemRepo, times(1)).delete(existingItem);
+    }
+
+    @Test
+    void deleteMenuItem_ForbiddenMismatch() {
+        MenuItem existingItem = new MenuItem();
+        existingItem.setMenuItemId(itemId);
+        Restaurant r2 = new Restaurant();
+        r2.setRestaurantId(UUID.randomUUID());
+        existingItem.setRestaurant(r2);
+
+        when(menuItemRepo.findById(itemId)).thenReturn(Optional.of(existingItem));
+
+        APIException ex = assertThrows(APIException.class, () -> 
+            adminMenuService.deleteMenuItem(restaurantId, itemId, tokenRestaurantId));
+        assertEquals(com.burito.core.enums.ErrorCode.BAD_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    void deleteMenuItem_NotFound() {
+        when(menuItemRepo.findById(itemId)).thenReturn(Optional.empty());
+
+        APIException ex = assertThrows(APIException.class, () -> 
+            adminMenuService.deleteMenuItem(restaurantId, itemId, tokenRestaurantId));
+        assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    void updateMenuItem_ForbiddenMismatch() {
+        MenuItem existingItem = new MenuItem();
+        existingItem.setMenuItemId(itemId);
+        Restaurant r2 = new Restaurant();
+        r2.setRestaurantId(UUID.randomUUID());
+        existingItem.setRestaurant(r2);
+
+        when(menuItemRepo.findById(itemId)).thenReturn(Optional.of(existingItem));
+
+        APIException ex = assertThrows(APIException.class, () -> 
+            adminMenuService.updateMenuItem(restaurantId, itemId, tokenRestaurantId, request));
+        assertEquals(com.burito.core.enums.ErrorCode.BAD_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    void updateMenuItem_NotFound() {
+        when(menuItemRepo.findById(itemId)).thenReturn(Optional.empty());
+
+        APIException ex = assertThrows(APIException.class, () -> 
+            adminMenuService.updateMenuItem(restaurantId, itemId, tokenRestaurantId, request));
+        assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    void updateMenuItem_WithNullFields() {
+        MenuItem existingItem = new MenuItem();
+        existingItem.setMenuItemId(itemId);
+        existingItem.setRestaurant(restaurant);
+        existingItem.setName("Old Name");
+
+        MenuItemRequest nullReq = new MenuItemRequest(null, null, null, null, false, null);
+
+        when(menuItemRepo.findById(itemId)).thenReturn(Optional.of(existingItem));
+        when(menuItemRepo.save(any(MenuItem.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        MenuItem result = adminMenuService.updateMenuItem(restaurantId, itemId, tokenRestaurantId, nullReq);
+
+        assertNull(result.getName());
     }
 }

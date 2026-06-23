@@ -57,4 +57,13 @@ class UserControllerTest {
     mockMvc.perform(get("/api/me"))
             .andExpect(status().isUnauthorized());
   }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnUnauthorizedWhenUserIsNull() {
+    when(authService.getCurrentUser("deadpool456@gmail.com")).thenReturn(null);
+
+    mockMvc.perform(get("/api/me"))
+            .andExpect(status().isUnauthorized());
+  }
 }

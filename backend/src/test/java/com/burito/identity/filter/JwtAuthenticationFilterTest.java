@@ -121,6 +121,24 @@ class JwtAuthenticationFilterTest {
     assertEquals(401, response.getStatus());
     assertEquals("application/json", response.getContentType());
     assertEquals("{\"error\":\"invalid_token\"}", response.getContentAsString());
+    assertEquals("{\"error\":\"invalid_token\"}", response.getContentAsString());
     verify(filterChain, never()).doFilter(any(), any());
+  }
+
+  @Test
+  void shouldAuthenticateWithDefaultRoleWhenRoleIsNull() throws Exception {
+    var request = new MockHttpServletRequest();
+    request.addHeader("Authorization", "Bearer valid.jwt.token");
+    var response = new MockHttpServletResponse();
+
+    when(jwtService.extractUsername("valid.jwt.token")).thenReturn("wade@test.com");
+    when(jwtService.extractRole("valid.jwt.token")).thenReturn(null);
+
+    filter.doFilter(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+    assertTrue(SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
   }
 }

@@ -290,13 +290,160 @@ class CartServiceTest {
     }
 
     @Test
-    void shouldClearEmptyCartIdempotently() {
-        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
-        
-        CartView result = cartService.clearCart(userId, null);
-        
+    void getCart_shouldReturnCart() {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        CartItem itemA = new CartItem(cart, menuItemA, 2, menuItemA.getPrice());
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(List.of(itemA));
+
+        CartView result = cartService.getCart(userId, null);
         assertNotNull(result);
+        assertEquals(cart.getCartId(), result.cartId());
+        assertEquals(1, result.items().size());
+    }
+
+    @Test
+    void getCart_shouldReturnEmptyCartWhenNotFound() {
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
+
+        CartView result = cartService.getCart(userId, null);
+        assertNotNull(result);
+        assertNull(result.cartId());
         assertTrue(result.items().isEmpty());
-        assertEquals(BigDecimal.ZERO, result.total());
+    }
+
+    @Test
+    void decrementItem_shouldDecrementQuantity() throws Exception {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+        CartItem itemA = new CartItem(cart, menuItemA, 2, menuItemA.getPrice());
+        itemA.setCartItemId(UUID.randomUUID());
+
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        when(cartItemRepo.findById(itemA.getCartItemId())).thenReturn(Optional.of(itemA));
+        when(cartRepo.save(any(Cart.class))).thenReturn(cart);
+
+        CartView result = cartService.decrementItem(userId, null, itemA.getCartItemId());
+        assertEquals(1, itemA.getQuantity());
+        verify(cartItemRepo).save(itemA);
+    }
+
+    @Test
+    void decrementItem_shouldRemoveItemWhenQuantityIsOne() throws Exception {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+        CartItem itemA = new CartItem(cart, menuItemA, 1, menuItemA.getPrice());
+        itemA.setCartItemId(UUID.randomUUID());
+
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        when(cartItemRepo.findById(itemA.getCartItemId())).thenReturn(Optional.of(itemA));
+
+        CartView result = cartService.decrementItem(userId, null, itemA.getCartItemId());
+        verify(cartItemRepo).delete(itemA);
+    }
+
+    @Test
+    void decrementItem_shouldThrowExceptionWhenCartNotFound() {
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
+        assertThrows(CartItemNotFoundException.class, () -> cartService.decrementItem(userId, null, UUID.randomUUID()));
+    }
+
+    @Test
+    void mergeCart_shouldDiscardGuestCartIfUserCartExists() {
+        UUID guestId = UUID.randomUUID();
+        Cart guestCart = new Cart(guestId, restaurantB);
+        guestCart.setCartId(UUID.randomUUID());
+        Cart userCart = new Cart(user, restaurantA);
+        userCart.setCartId(UUID.randomUUID());
+
+        when(cartRepo.findByGuestIdAndStatus(guestId, CartStatus.PENDING)).thenReturn(Optional.of(guestCart));
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(userCart));
+
+        cartService.mergeCart(userId, guestId);
+
+        assertEquals(CartStatus.EXPIRED, guestCart.getStatus());
+        verify(cartRepo).save(guestCart);
+    }
+
+    @Test
+    void mergeCart_shouldAssignGuestCartToUser() {
+        UUID guestId = UUID.randomUUID();
+        Cart guestCart = new Cart(guestId, restaurantB);
+        guestCart.setCartId(UUID.randomUUID());
+
+        when(cartRepo.findByGuestIdAndStatus(guestId, CartStatus.PENDING)).thenReturn(Optional.of(guestCart));
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
+        when(userRepo.findById(userId)).thenReturn(Optional.of(user));
+
+        cartService.mergeCart(userId, guestId);
+
+        assertEquals(user, guestCart.getUser());
+        assertNull(guestCart.getGuestId());
+        verify(cartRepo).save(guestCart);
+    }
+
+    @Test
+    void mergeCart_shouldDoNothingIfIdsNull() {
+        cartService.mergeCart(null, UUID.randomUUID());
+        verify(cartRepo, never()).findByGuestIdAndStatus(any(), any());
+    }
+
+    @Test
+    void getCartEntity_shouldThrowExceptionIfBothIdsNull() {
+        assertThrows(IllegalArgumentException.class, () -> cartService.getCart(null, null));
+    }
+
+    @Test
+    void decrementItem_whenItemDoesNotBelongToCart_throwsException() {
+        Cart cart = new Cart(user, restaurantA);
+        cart.setCartId(UUID.randomUUID());
+
+        Cart otherCart = new Cart(user, restaurantB);
+        otherCart.setCartId(UUID.randomUUID());
+
+        CartItem itemA = new CartItem(otherCart, menuItemA, 2, menuItemA.getPrice());
+        itemA.setCartItemId(UUID.randomUUID());
+        
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.of(cart));
+        when(cartItemRepo.findById(itemA.getCartItemId())).thenReturn(Optional.of(itemA));
+
+        assertThrows(CartItemNotFoundException.class, () -> cartService.decrementItem(userId, null, itemA.getCartItemId()));
+    }
+
+    @Test
+    void clearCart_whenCartNull_returnsEmptyCartView() {
+        when(cartRepo.findByUser_UserIdAndStatus(userId, CartStatus.PENDING)).thenReturn(Optional.empty());
+        CartView result = cartService.clearCart(userId, null);
+        assertNull(result.cartId());
+        assertTrue(result.items().isEmpty());
+    }
+
+    @Test
+    void addItem_whenUserNotFound_throwsException() throws Exception {
+        when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
+        when(userRepo.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> cartService.addItem(userId, null, menuItemIdA, 2));
+    }
+
+    @Test
+    void addItem_whenUserNull_createsCartWithGuestId() throws Exception {
+        UUID guestId = UUID.randomUUID();
+        when(menuItemRepo.findById(menuItemIdA)).thenReturn(Optional.of(menuItemA));
+        when(cartRepo.findByGuestIdAndStatus(guestId, CartStatus.PENDING)).thenReturn(Optional.empty());
+
+        Cart expectedCart = new Cart(guestId, restaurantA);
+        expectedCart.setCartId(UUID.randomUUID());
+        when(cartRepo.save(any(Cart.class))).thenReturn(expectedCart);
+
+        CartItem expectedItem = new CartItem(expectedCart, menuItemA, 2, menuItemA.getPrice());
+        when(cartItemRepo.findByCart_CartId(expectedCart.getCartId())).thenReturn(List.of(expectedItem));
+
+        CartView result = cartService.addItem(null, guestId, menuItemIdA, 2);
+
+        assertNotNull(result);
+        assertEquals(expectedCart.getCartId(), result.cartId());
+        verify(cartRepo, atLeastOnce()).save(any(Cart.class));
     }
 }

@@ -84,4 +84,39 @@ class JWTServiceTest {
 
     assertFalse(jwtService.isValidToken(token, wrongUser));
   }
+
+  @Test
+  void shouldSignTokenWithRestaurantId() {
+    User user = new User("Wade", "wade@test.com", null);
+    user.setUserId(UUID.randomUUID());
+    String restaurantId = UUID.randomUUID().toString();
+
+    String token = jwtService.sign(user, restaurantId);
+
+    assertNotNull(token);
+    assertFalse(token.isBlank());
+  }
+
+  @Test
+  void shouldExtractRestaurantIdFromSignedToken() {
+    User user = new User("Wade", "wade@test.com", null);
+    user.setUserId(UUID.randomUUID());
+    String restaurantId = UUID.randomUUID().toString();
+
+    String token = jwtService.sign(user, restaurantId);
+
+    assertEquals(restaurantId, jwtService.extractRestaurantId(token));
+  }
+
+  @Test
+  void shouldSignTokenWhenUserRoleIsNull() {
+    User user = new User("Wade", "wade@test.com", null);
+    user.setUserId(UUID.randomUUID());
+    user.setRole(null);
+
+    String token = jwtService.sign(user);
+
+    assertNotNull(token);
+    assertEquals("USER", jwtService.extractRole(token));
+  }
 }

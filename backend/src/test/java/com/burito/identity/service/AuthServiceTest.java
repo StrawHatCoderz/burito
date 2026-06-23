@@ -33,6 +33,7 @@ class AuthServiceTest {
   @Mock private AuthenticationManager authenticationManager;
   @Mock private JWTService jwtService;
   @Mock private RefreshTokenService refreshTokenService;
+  @Mock private com.burito.catalog.service.RestaurantService restaurantService;
 
   @InjectMocks
   private AuthService authService;
@@ -178,6 +179,147 @@ class AuthServiceTest {
     when(userRepo.findUserByEmail("deadpool@test.com")).thenReturn(user);
 
     assertEquals(user, authService.getCurrentUser("deadpool@test.com"));
+  }
+
+  // --- registerAdmin ---
+
+  @Test
+  void shouldRegisterAdminWithValidCredentialsAndNullRestaurantName() throws Exception {
+    UUID userId = UUID.randomUUID();
+    User savedUser = new User("Admin", "admin@test.com", "hashed", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    savedUser.setUserId(userId);
+
+    when(userRepo.findUserByEmail("admin@test.com")).thenReturn(null);
+    when(passwordEncoder.encode("loveyou3000")).thenReturn("hashed");
+    when(userRepo.save(any(User.class))).thenReturn(savedUser);
+    when(restaurantService.createRestaurantForAdmin(userId, "Admin's Restaurant", com.burito.catalog.enums.CuisineType.INDIAN, 30.0)).thenReturn(null);
+
+    UserCreationView result = authService.registerAdmin("Admin", "admin@test.com", "loveyou3000", null, com.burito.catalog.enums.CuisineType.INDIAN, 30.0);
+
+    assertEquals(userId, result.userId());
+    verify(restaurantService).createRestaurantForAdmin(userId, "Admin's Restaurant", com.burito.catalog.enums.CuisineType.INDIAN, 30.0);
+  }
+
+  @Test
+  void shouldRegisterAdminWithValidCredentialsAndProvidedRestaurantName() throws Exception {
+    UUID userId = UUID.randomUUID();
+    User savedUser = new User("Admin", "admin@test.com", "hashed", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    savedUser.setUserId(userId);
+
+    when(userRepo.findUserByEmail("admin@test.com")).thenReturn(null);
+    when(passwordEncoder.encode("loveyou3000")).thenReturn("hashed");
+    when(userRepo.save(any(User.class))).thenReturn(savedUser);
+    when(restaurantService.createRestaurantForAdmin(userId, "My Custom Restaurant", com.burito.catalog.enums.CuisineType.INDIAN, 30.0)).thenReturn(null);
+
+    UserCreationView result = authService.registerAdmin("Admin", "admin@test.com", "loveyou3000", "My Custom Restaurant", com.burito.catalog.enums.CuisineType.INDIAN, 30.0);
+
+    assertEquals(userId, result.userId());
+    verify(restaurantService).createRestaurantForAdmin(userId, "My Custom Restaurant", com.burito.catalog.enums.CuisineType.INDIAN, 30.0);
+  }
+
+  @Test
+  void shouldThrowWhenAdminFullNameIsNull() {
+    assertThrows(InvalidCredentialsException.class,
+            () -> authService.registerAdmin(null, "admin@test.com", "loveyou3000", null, com.burito.catalog.enums.CuisineType.INDIAN, 30.0));
+  }
+
+  @Test
+  void shouldThrowWhenAdminEmailIsInvalidFormat() {
+    assertThrows(InvalidCredentialsException.class,
+            () -> authService.registerAdmin("Admin", "notanemail", "loveyou3000", null, com.burito.catalog.enums.CuisineType.INDIAN, 30.0));
+  }
+
+  @Test
+  void shouldThrowWhenAdminEmailIsAlreadyRegistered() {
+    when(userRepo.findUserByEmail("taken@test.com"))
+            .thenReturn(new User("Someone", "taken@test.com", "hash"));
+
+    assertThrows(EmailAlreadyExistsException.class,
+            () -> authService.registerAdmin("Admin", "taken@test.com", "loveyou3000", null, com.burito.catalog.enums.CuisineType.INDIAN, 30.0));
+  }
+
+  @Test
+  void shouldThrowWhenAdminPasswordIsTooShort() {
+    when(userRepo.findUserByEmail(anyString())).thenReturn(null);
+
+    assertThrows(InvalidCredentialsException.class,
+            () -> authService.registerAdmin("Admin", "admin@test.com", "short", null, com.burito.catalog.enums.CuisineType.INDIAN, 30.0));
+  }
+
+  // --- login for admin ---
+  
+  @Test
+  void shouldReturnJwtTokenOnAdminLoginWithRestaurant() throws Exception {
+    User user = new User("Admin", "admin@test.com", "hash", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    user.setUserId(UUID.randomUUID());
+    RefreshToken refreshToken = buildRefreshToken(user, "refresh-token-uuid");
+    UUID restaurantId = UUID.randomUUID();
+
+    when(userRepo.findUserByEmail("admin@test.com")).thenReturn(user);
+    when(restaurantService.getRestaurantIdByOwnerId(user.getUserId())).thenReturn(restaurantId);
+    when(jwtService.sign(user, restaurantId.toString())).thenReturn("signed.access.token");
+    when(refreshTokenService.create(user)).thenReturn(refreshToken);
+
+    JWTToken result = authService.login("admin@test.com", "loveyou3000");
+
+    verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+    assertEquals("signed.access.token", result.accessToken());
+    assertEquals("refresh-token-uuid", result.refreshToken());
+  }
+
+  @Test
+  void shouldReturnJwtTokenOnAdminLoginWithoutRestaurant() throws Exception {
+    User user = new User("Admin", "admin@test.com", "hash", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    user.setUserId(UUID.randomUUID());
+    RefreshToken refreshToken = buildRefreshToken(user, "refresh-token-uuid");
+
+    when(userRepo.findUserByEmail("admin@test.com")).thenReturn(user);
+    when(restaurantService.getRestaurantIdByOwnerId(user.getUserId())).thenReturn(null);
+    when(jwtService.sign(user, null)).thenReturn("signed.access.token");
+    when(refreshTokenService.create(user)).thenReturn(refreshToken);
+
+    JWTToken result = authService.login("admin@test.com", "loveyou3000");
+
+    assertEquals("signed.access.token", result.accessToken());
+  }
+
+  // --- refresh for admin ---
+
+  @Test
+  void shouldReturnNewTokensOnAdminRefreshWithRestaurant() throws Exception {
+    User user = new User("Admin", "admin@test.com", "hash", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    user.setUserId(UUID.randomUUID());
+    RefreshToken existing = buildRefreshToken(user, "old-refresh-token");
+    RefreshToken rotated = buildRefreshToken(user, "new-refresh-token");
+    UUID restaurantId = UUID.randomUUID();
+
+    when(refreshTokenService.validate("old-refresh-token")).thenReturn(existing);
+    when(restaurantService.getRestaurantIdByOwnerId(user.getUserId())).thenReturn(restaurantId);
+    when(jwtService.sign(user, restaurantId.toString())).thenReturn("new.access.token");
+    when(refreshTokenService.create(user)).thenReturn(rotated);
+
+    JWTToken result = authService.refresh("old-refresh-token");
+
+    verify(refreshTokenService).revoke("old-refresh-token");
+    assertEquals("new.access.token", result.accessToken());
+    assertEquals("new-refresh-token", result.refreshToken());
+  }
+
+  @Test
+  void shouldReturnNewTokensOnAdminRefreshWithoutRestaurant() throws Exception {
+    User user = new User("Admin", "admin@test.com", "hash", com.burito.identity.enums.Role.RESTAURANT_ADMIN);
+    user.setUserId(UUID.randomUUID());
+    RefreshToken existing = buildRefreshToken(user, "old-refresh-token");
+    RefreshToken rotated = buildRefreshToken(user, "new-refresh-token");
+
+    when(refreshTokenService.validate("old-refresh-token")).thenReturn(existing);
+    when(restaurantService.getRestaurantIdByOwnerId(user.getUserId())).thenReturn(null);
+    when(jwtService.sign(user, null)).thenReturn("new.access.token");
+    when(refreshTokenService.create(user)).thenReturn(rotated);
+
+    JWTToken result = authService.refresh("old-refresh-token");
+
+    assertEquals("new.access.token", result.accessToken());
   }
 
   private RefreshToken buildRefreshToken(User user, String tokenStr) {

@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -265,6 +266,130 @@ class CartControllerTest {
     @Test
     void shouldReturn401WhenDeletingWithoutAuth() throws Exception {
         mockMvc.perform(delete("/api/cart"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getCart_shouldReturn401WhenNoAuth() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/cart"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getCart_shouldReturnCartWithGuestId() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/cart")
+                .header("X-Guest-Id", UUID.randomUUID().toString()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void mergeCart_shouldReturn401WhenNoAuth() throws Exception {
+        mockMvc.perform(post("/api/cart/merge")
+                .header("X-Guest-Id", UUID.randomUUID().toString()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void mergeCart_shouldReturnOkWhenAuth() throws Exception {
+        mockMvc.perform(post("/api/cart/merge")
+                .header("X-Guest-Id", UUID.randomUUID().toString()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void decrementItem_shouldReturnOkAndDecrementQuantity() throws Exception {
+        MenuItem item = menuItemRepo.findAll().stream()
+                .filter(i -> i.getName().equals("Samosa (2 pcs)"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Seeded menu item Samosa (2 pcs) not found"));
+
+        CartItemRequest request = new CartItemRequest(item.getMenuItemId(), 2);
+
+        String cartResponse = mockMvc.perform(post("/api/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse().getContentAsString();
+
+        String cartItemId = objectMapper.readTree(cartResponse)
+                .get("data").get("items").get(0).get("cartItemId").asText();
+
+        mockMvc.perform(put("/api/cart/items/" + cartItemId + "/decrement"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items[0].quantity").value(1));
+    }
+
+    @Test
+    void decrementItem_shouldReturn401WhenNoAuth() throws Exception {
+        mockMvc.perform(put("/api/cart/items/" + UUID.randomUUID() + "/decrement"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void decrementItem_shouldReturn404WhenItemNotFound() throws Exception {
+        mockMvc.perform(put("/api/cart/items/" + UUID.randomUUID() + "/decrement"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com")
+    void decrementItem_whenUserNotFound_shouldReturn401() throws Exception {
+        mockMvc.perform(put("/api/cart/items/" + UUID.randomUUID() + "/decrement"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com")
+    void clearCart_whenUserNotFound_shouldReturn401() throws Exception {
+        mockMvc.perform(delete("/api/cart"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com")
+    void removeItem_whenUserNotFound_shouldReturn401() throws Exception {
+        mockMvc.perform(delete("/api/cart/items/" + UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com")
+    void getCart_whenUserNotFound_shouldReturn401() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/cart"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com")
+    void addItem_whenUserNotFound_shouldReturn401() throws Exception {
+        CartItemRequest request = new CartItemRequest(UUID.randomUUID(), 2);
+        mockMvc.perform(post("/api/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com")
+    void mergeCart_whenUserNotFound_shouldReturn401() throws Exception {
+        mockMvc.perform(post("/api/cart/merge")
+                        .header("X-Guest-Id", UUID.randomUUID().toString()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com")
+    void getCart_shouldReturnCartWithUser() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/cart"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void removeItem_shouldReturn401WhenNoAuthAndNoGuestId() throws Exception {
+        mockMvc.perform(delete("/api/cart/items/" + UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 }

@@ -118,4 +118,40 @@ class RestaurantServiceTest {
     service.search("hub", CuisineType.INDIAN);
     verify(repo).search("hub", CuisineType.INDIAN);
   }
+
+  @Test
+  void shouldCreateRestaurantForAdmin() {
+    UUID ownerId = UUID.randomUUID();
+    Restaurant r = new Restaurant();
+    r.setOwnerId(ownerId);
+    when(repo.save(any(Restaurant.class))).thenReturn(r);
+
+    Restaurant result = service.createRestaurantForAdmin(ownerId, "Name", CuisineType.ITALIAN, 45.0);
+
+    assertNotNull(result);
+    assertEquals(ownerId, result.getOwnerId());
+    verify(repo).save(any(Restaurant.class));
+  }
+
+  @Test
+  void shouldGetRestaurantIdByOwnerIdWhenExists() {
+    UUID ownerId = UUID.randomUUID();
+    Restaurant r = new Restaurant();
+    r.setRestaurantId(UUID.randomUUID());
+    when(repo.findByOwnerId(ownerId)).thenReturn(r);
+
+    UUID resultId = service.getRestaurantIdByOwnerId(ownerId);
+
+    assertEquals(r.getRestaurantId(), resultId);
+  }
+
+  @Test
+  void shouldReturnNullWhenGetRestaurantIdByOwnerIdNotFound() {
+    UUID ownerId = UUID.randomUUID();
+    when(repo.findByOwnerId(ownerId)).thenReturn(null);
+
+    UUID resultId = service.getRestaurantIdByOwnerId(ownerId);
+
+    assertNull(resultId);
+  }
 }

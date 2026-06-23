@@ -4,6 +4,7 @@ import com.burito.ordering.controller.views.OrderView;
 import com.burito.identity.domain.User;
 import com.burito.identity.service.UserService;
 import com.burito.ordering.service.OrderService;
+import com.burito.ordering.domain.Order;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,5 +78,60 @@ class OrderControllerTest {
 
         APIException ex = assertThrows(APIException.class, () -> orderController.getActiveOrder(userDetails));
         assertEquals(com.burito.core.enums.ErrorCode.NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    void getActiveOrder_throwsUnauthorizedWhenUserDetailsNull() {
+        APIException ex = assertThrows(APIException.class, () -> orderController.getActiveOrder(null));
+        assertEquals(com.burito.core.enums.ErrorCode.UNAUTHORIZED, ex.getErrorCode());
+    }
+
+    @Test
+    void getActiveOrder_throwsUnauthorizedWhenUserNotFound() {
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("test@test.com");
+        when(userService.findUserByEmail("test@test.com")).thenReturn(null);
+
+        APIException ex = assertThrows(APIException.class, () -> orderController.getActiveOrder(userDetails));
+        assertEquals(com.burito.core.enums.ErrorCode.UNAUTHORIZED, ex.getErrorCode());
+    }
+
+    @Test
+    void checkout_success() {
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("test@test.com");
+
+        User user = new User();
+        user.setUserId(UUID.randomUUID());
+        user.setEmail("test@test.com");
+        when(userService.findUserByEmail("test@test.com")).thenReturn(user);
+
+        Order order = new Order();
+        order.setId(UUID.randomUUID());
+        order.setStatus(com.burito.ordering.enums.OrderStatus.PENDING);
+        when(orderService.checkout(user.getUserId())).thenReturn(order);
+
+        ResponseEntity<?> response = orderController.checkout(userDetails);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) ((APIResponse<?>) response.getBody()).data();
+        assertEquals(order.getId(), data.get("orderId"));
+        assertEquals(com.burito.ordering.enums.OrderStatus.PENDING, data.get("status"));
+    }
+
+    @Test
+    void checkout_throwsUnauthorizedWhenUserDetailsNull() {
+        APIException ex = assertThrows(APIException.class, () -> orderController.checkout(null));
+        assertEquals(com.burito.core.enums.ErrorCode.UNAUTHORIZED, ex.getErrorCode());
+    }
+
+    @Test
+    void checkout_throwsUnauthorizedWhenUserNotFound() {
+        UserDetails userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("test@test.com");
+        when(userService.findUserByEmail("test@test.com")).thenReturn(null);
+
+        APIException ex = assertThrows(APIException.class, () -> orderController.checkout(userDetails));
+        assertEquals(com.burito.core.enums.ErrorCode.UNAUTHORIZED, ex.getErrorCode());
     }
 }

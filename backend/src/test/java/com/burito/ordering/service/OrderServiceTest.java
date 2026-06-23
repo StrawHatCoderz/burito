@@ -87,4 +87,186 @@ class OrderServiceTest {
 
         assertNull(view);
     }
+
+    @Test
+    void checkout_throwsExceptionWhenUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(userService.findUserById(userId)).thenReturn(null);
+        
+        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            orderService.checkout(userId);
+        });
+        assertEquals("User not found", exception.getMessage());
+    }
+
+    @Test
+    void checkout_throwsExceptionWhenCartNotFound() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        when(userService.findUserById(userId)).thenReturn(user);
+        when(cartRepo.findByUser_UserIdAndStatus(userId, com.burito.ordering.enums.CartStatus.PENDING)).thenReturn(java.util.Optional.empty());
+
+        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> {
+            orderService.checkout(userId);
+        });
+        assertEquals("No active cart found", exception.getMessage());
+    }
+
+    @Test
+    void checkout_throwsExceptionWhenCartEmpty() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        when(userService.findUserById(userId)).thenReturn(user);
+        
+        com.burito.ordering.domain.Cart cart = new com.burito.ordering.domain.Cart();
+        cart.setCartId(UUID.randomUUID());
+        when(cartRepo.findByUser_UserIdAndStatus(userId, com.burito.ordering.enums.CartStatus.PENDING)).thenReturn(java.util.Optional.of(cart));
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(java.util.Collections.emptyList());
+
+        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> {
+            orderService.checkout(userId);
+        });
+        assertEquals("Cannot checkout with an empty cart", exception.getMessage());
+    }
+
+    @Test
+    void checkout_success() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        when(userService.findUserById(userId)).thenReturn(user);
+        
+        Restaurant restaurant = new Restaurant();
+        restaurant.setRestaurantId(UUID.randomUUID());
+        restaurant.setOpen(true);
+
+        com.burito.ordering.domain.Cart cart = new com.burito.ordering.domain.Cart();
+        cart.setCartId(UUID.randomUUID());
+        cart.setRestaurant(restaurant);
+        cart.setTotal(java.math.BigDecimal.valueOf(100.0));
+        when(cartRepo.findByUser_UserIdAndStatus(userId, com.burito.ordering.enums.CartStatus.PENDING)).thenReturn(java.util.Optional.of(cart));
+
+        com.burito.ordering.domain.CartItem cartItem = new com.burito.ordering.domain.CartItem();
+        com.burito.catalog.domain.MenuItem menuItem = new com.burito.catalog.domain.MenuItem();
+        menuItem.setMenuItemId(UUID.randomUUID());
+        menuItem.setName("Taco");
+        cartItem.setMenuItem(menuItem);
+        cartItem.setUnitPrice(java.math.BigDecimal.valueOf(50.0));
+        cartItem.setQuantity(2);
+
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(java.util.List.of(cartItem));
+        when(paymentService.processPayment(100.0)).thenReturn(true);
+        when(orderRepo.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Order order = orderService.checkout(userId);
+        
+        assertNotNull(order);
+        assertEquals(100.0, order.getTotalAmount());
+        assertEquals(1, order.getItems().size());
+        org.mockito.Mockito.verify(cartItemRepo).deleteByCart_CartId(cart.getCartId());
+        org.mockito.Mockito.verify(cartRepo).save(cart);
+        assertEquals(com.burito.ordering.enums.CartStatus.EXPIRED, cart.getStatus());
+    }
+
+    @Test
+    void getActiveOrders_success() {
+        UUID restaurantId = UUID.randomUUID();
+        Order order = new Order();
+        when(orderRepo.findByRestaurant_RestaurantIdAndStatusInOrderByCreatedAtDesc(eq(restaurantId), any())).thenReturn(java.util.List.of(order));
+
+        java.util.List<Order> orders = orderService.getActiveOrders(restaurantId);
+        assertEquals(1, orders.size());
+    }
+
+    @Test
+    void updateOrderStatus_throwsExceptionWhenOrderNotFound() {
+        UUID orderId = UUID.randomUUID();
+        when(orderRepo.findById(orderId)).thenReturn(java.util.Optional.empty());
+
+        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            orderService.updateOrderStatus(orderId, UUID.randomUUID(), OrderStatus.ACCEPTED);
+        });
+        assertEquals("Order not found", exception.getMessage());
+    }
+
+    @Test
+    void updateOrderStatus_throwsExceptionWhenForbidden() {
+        UUID orderId = UUID.randomUUID();
+        Order order = new Order();
+        Restaurant restaurant = new Restaurant();
+        restaurant.setRestaurantId(UUID.randomUUID());
+        order.setRestaurant(restaurant);
+        when(orderRepo.findById(orderId)).thenReturn(java.util.Optional.of(order));
+
+        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> {
+            orderService.updateOrderStatus(orderId, UUID.randomUUID(), OrderStatus.ACCEPTED);
+        });
+        assertEquals("Forbidden", exception.getMessage());
+    }
+
+    @Test
+    void updateOrderStatus_success() {
+        UUID orderId = UUID.randomUUID();
+        UUID restaurantId = UUID.randomUUID();
+        Order order = new Order();
+        Restaurant restaurant = new Restaurant();
+        restaurant.setRestaurantId(restaurantId);
+        order.setRestaurant(restaurant);
+        when(orderRepo.findById(orderId)).thenReturn(java.util.Optional.of(order));
+        when(orderRepo.save(any(Order.class))).thenAnswer(i -> i.getArgument(0));
+
+        Order updated = orderService.updateOrderStatus(orderId, restaurantId, OrderStatus.DELIVERED);
+        assertEquals(OrderStatus.DELIVERED, updated.getStatus());
+    }
+
+    @Test
+    void checkout_shouldThrowExceptionWhenRestaurantIsClosed() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        when(userService.findUserById(userId)).thenReturn(user);
+
+        Restaurant closedRestaurant = new Restaurant();
+        closedRestaurant.setRestaurantId(UUID.randomUUID());
+        closedRestaurant.setOpen(false);
+
+        com.burito.ordering.domain.Cart cart = new com.burito.ordering.domain.Cart(user, closedRestaurant);
+        cart.setCartId(UUID.randomUUID());
+        cart.setTotal(java.math.BigDecimal.valueOf(100.0));
+
+        when(cartRepo.findByUser_UserIdAndStatus(userId, com.burito.ordering.enums.CartStatus.PENDING)).thenReturn(java.util.Optional.of(cart));
+        
+        com.burito.catalog.domain.MenuItem menuItem = new com.burito.catalog.domain.MenuItem();
+        menuItem.setMenuItemId(UUID.randomUUID());
+        com.burito.ordering.domain.CartItem cartItem = new com.burito.ordering.domain.CartItem(cart, menuItem, 2, java.math.BigDecimal.valueOf(50.0));
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(java.util.List.of(cartItem));
+
+        IllegalStateException exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> orderService.checkout(userId));
+        assertEquals("Restaurant is currently closed", exception.getMessage());
+    }
+
+    @Test
+    void checkout_shouldThrowExceptionWhenPaymentFails() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        when(userService.findUserById(userId)).thenReturn(user);
+
+        Restaurant restaurant = new Restaurant();
+        restaurant.setRestaurantId(UUID.randomUUID());
+        restaurant.setOpen(true);
+
+        com.burito.ordering.domain.Cart cart = new com.burito.ordering.domain.Cart(user, restaurant);
+        cart.setCartId(UUID.randomUUID());
+        cart.setTotal(java.math.BigDecimal.valueOf(100.0));
+
+        when(cartRepo.findByUser_UserIdAndStatus(userId, com.burito.ordering.enums.CartStatus.PENDING)).thenReturn(java.util.Optional.of(cart));
+        
+        com.burito.catalog.domain.MenuItem menuItem = new com.burito.catalog.domain.MenuItem();
+        menuItem.setMenuItemId(UUID.randomUUID());
+        com.burito.ordering.domain.CartItem cartItem = new com.burito.ordering.domain.CartItem(cart, menuItem, 2, java.math.BigDecimal.valueOf(50.0));
+        when(cartItemRepo.findByCart_CartId(cart.getCartId())).thenReturn(java.util.List.of(cartItem));
+        
+        when(paymentService.processPayment(100.0)).thenReturn(false);
+
+        IllegalStateException exception = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> orderService.checkout(userId));
+        assertEquals("Payment failed", exception.getMessage());
+    }
 }
