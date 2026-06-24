@@ -40,6 +40,13 @@ public class User {
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime createdAt;
 
+  @Column(name = "phone_number")
+  private String phoneNumber;
+
+  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+  @JoinColumn(name = "address_id", referencedColumnName = "addressId")
+  private UserAddress address;
+
   public User(String fullName, String email, @Nullable String hashPassword) {
     this.fullName = fullName;
     this.email = email;

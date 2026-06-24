@@ -53,4 +53,23 @@ class UserTest {
         User user = new User("Admin", "admin@test.com", "hash", null);
         assertEquals(Role.USER, user.getRole());
     }
+
+    @Test
+    void testPhoneNumberAndAddressFields() {
+        User user = new User();
+        assertNull(user.getPhoneNumber());
+        assertNull(user.getAddress());
+
+        user.setPhoneNumber("1234567890");
+        UserAddress address = new UserAddress(null, "123 St", "City", "State", "India", "12345");
+        user.setAddress(address);
+
+        assertEquals("1234567890", user.getPhoneNumber());
+        assertNotNull(user.getAddress());
+        assertEquals("123 St", user.getAddress().getStreet());
+        assertEquals("City", user.getAddress().getCity());
+        assertEquals("State", user.getAddress().getState());
+        assertEquals("12345", user.getAddress().getZipcode());
+        assertEquals("India", user.getAddress().getCountry());
+    }
 }
