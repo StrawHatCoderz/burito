@@ -4,11 +4,15 @@ import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Badge from '@mui/material/Badge'
+import Box from '@mui/material/Box'
 import { CartIcon } from './icons/CartIcon'
+import { ProfileIcon } from './icons/ProfileIcon'
 import { useCart } from '../../features/cart/CartContext'
+import { useAuth } from '../hooks/useAuth'
 
 export const NavBar = () => {
   const { cart, openCartDrawer } = useCart()
+  const { isAuthenticated } = useAuth()
 
   return (
     <>
@@ -23,20 +27,33 @@ export const NavBar = () => {
             Burito
           </Typography>
           
-          <IconButton onClick={openCartDrawer} aria-label="Open cart" sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' }}}>
-            <Badge
-              badgeContent={cart.cartItemCount}
-              sx={{
-                '& .MuiBadge-badge': {
-                  bgcolor: '#FF5A5F',
-                  color: 'white',
-                  fontWeight: 'bold',
-                }
-              }}
-            >
-              <CartIcon />
-            </Badge>
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton onClick={openCartDrawer} aria-label="Open cart" sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' }}}>
+              <Badge
+                badgeContent={cart.cartItemCount}
+                sx={{
+                  '& .MuiBadge-badge': {
+                    bgcolor: '#FF5A5F',
+                    color: 'white',
+                    fontWeight: 'bold',
+                  }
+                }}
+              >
+                <CartIcon />
+              </Badge>
+            </IconButton>
+
+            {isAuthenticated && (
+              <IconButton
+                component={Link}
+                to="/profile"
+                aria-label="Profile"
+                sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' } }}
+              >
+                <ProfileIcon />
+              </IconButton>
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
       <Outlet />

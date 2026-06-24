@@ -2,6 +2,8 @@ package com.burito.identity.service;
 
 import com.burito.identity.domain.User;
 import com.burito.identity.repository.UserRepo;
+import com.burito.identity.domain.UserAddress;
+import com.burito.core.exceptions.APIException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -82,5 +84,117 @@ class UserServiceTest {
 
     User result = userService.findUserById(id);
     assertNull(result);
+  }
+
+  @Test
+  void updateProfile_shouldUpdateSuccessfully() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+    when(userRepo.save(user)).thenReturn(user);
+
+    User result = userService.updateProfile(id, "Deadpool", "+1234567890");
+
+    assertEquals("Deadpool", result.getFullName());
+    assertEquals("+1234567890", result.getPhoneNumber());
+  }
+
+  @Test
+  void updateProfile_shouldThrowNotFoundWhenUserDoesNotExist() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.empty());
+
+    assertThrows(APIException.class, () -> userService.updateProfile(id, "Deadpool", "12345678"));
+  }
+
+  @Test
+  void updateProfile_shouldThrowBadRequestWhenNameIsEmpty() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    assertThrows(APIException.class, () -> userService.updateProfile(id, "", "123456789"));
+    assertThrows(APIException.class, () -> userService.updateProfile(id, null, "123456789"));
+  }
+
+  @Test
+  void updateProfile_shouldThrowBadRequestWhenPhoneFormatIsInvalid() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    assertThrows(APIException.class, () -> userService.updateProfile(id, "Deadpool", "invalid-phone"));
+    assertThrows(APIException.class, () -> userService.updateProfile(id, "Deadpool", "123")); // too short
+  }
+
+  @Test
+  void updateAddress_shouldUpdateSuccessfully() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+    when(userRepo.save(user)).thenReturn(user);
+
+    UserAddress address = new UserAddress(null, "123 St", "City", "State", "India", "12345");
+    User result = userService.updateAddress(id, address);
+
+    assertNotNull(result.getAddress());
+    assertEquals("123 St", result.getAddress().getStreet());
+    assertEquals("City", result.getAddress().getCity());
+    assertEquals("State", result.getAddress().getState());
+    assertEquals("India", result.getAddress().getCountry());
+    assertEquals("12345", result.getAddress().getZipcode());
+  }
+
+  @Test
+  void updateAddress_shouldDefaultCountryToIndiaWhenEmpty() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+    when(userRepo.save(user)).thenReturn(user);
+
+    UserAddress address = new UserAddress(null, "123 St", "City", "State", "", "12345");
+    User result = userService.updateAddress(id, address);
+
+    assertEquals("India", result.getAddress().getCountry());
+  }
+
+  @Test
+  void updateAddress_shouldThrowBadRequestWhenStreetIsEmpty() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    UserAddress address = new UserAddress(null, "", "City", "State", "India", "12345");
+    assertThrows(APIException.class, () -> userService.updateAddress(id, address));
+  }
+
+  @Test
+  void updateAddress_shouldThrowBadRequestWhenCityIsEmpty() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    UserAddress address = new UserAddress(null, "123 St", "", "State", "India", "12345");
+    assertThrows(APIException.class, () -> userService.updateAddress(id, address));
+  }
+
+  @Test
+  void updateAddress_shouldThrowBadRequestWhenStateIsEmpty() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    UserAddress address = new UserAddress(null, "123 St", "City", "", "India", "12345");
+    assertThrows(APIException.class, () -> userService.updateAddress(id, address));
+  }
+
+  @Test
+  void updateAddress_shouldThrowBadRequestWhenZipcodeIsEmpty() {
+    java.util.UUID id = java.util.UUID.randomUUID();
+    User user = new User("Wade Wilson", "wade@test.com", "hash");
+    when(userRepo.findById(id)).thenReturn(java.util.Optional.of(user));
+
+    UserAddress address = new UserAddress(null, "123 St", "City", "State", "India", "");
+    assertThrows(APIException.class, () -> userService.updateAddress(id, address));
   }
 }

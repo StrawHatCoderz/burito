@@ -11,6 +11,7 @@ import { AdminRegisterPage } from '../features/admin/AdminRegisterPage'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { OrderNotificationListener } from '../shared/ui/OrderNotificationListener'
 import { ActiveOrderPage } from '../features/orders/ActiveOrderPage'
+import { ProfilePage } from '../features/profile/ProfilePage'
 
 export const Router = () => (
   <BrowserRouter>
@@ -31,6 +32,14 @@ export const Router = () => (
         <Route path="/restaurants" element={<RestaurantsPage />} />
         <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
         <Route path="/orders/active" element={<ActiveOrderPage />} />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/" element={<Navigate to="/restaurants" replace />} />
         <Route path="*" element={<Navigate to="/restaurants" replace />} />
       </Route>
@@ -40,4 +49,3 @@ export const Router = () => (
     <OrderNotificationListener />
   </BrowserRouter>
 )
-

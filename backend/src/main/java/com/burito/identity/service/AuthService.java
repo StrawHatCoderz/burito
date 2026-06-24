@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.burito.core.utils.ValidationUtils;
 
 @Service
 public class AuthService {
@@ -47,7 +48,7 @@ public class AuthService {
       throw new InvalidCredentialsException("Full name cannot be empty");
     }
 
-    if (!isValidEmail(email)) {
+    if (!ValidationUtils.isValidEmail(email)) {
       throw new InvalidCredentialsException("Invalid email");
     }
 
@@ -55,7 +56,7 @@ public class AuthService {
       throw new EmailAlreadyExistsException();
     }
 
-    if (!isValidPassword(password)) {
+    if (!ValidationUtils.isValidPassword(password)) {
       throw new InvalidCredentialsException("Password should be greater than 8 characters");
     }
 
@@ -72,7 +73,7 @@ public class AuthService {
       throw new InvalidCredentialsException("Full name cannot be empty");
     }
 
-    if (!isValidEmail(email)) {
+    if (!ValidationUtils.isValidEmail(email)) {
       throw new InvalidCredentialsException("Invalid email");
     }
 
@@ -80,7 +81,7 @@ public class AuthService {
       throw new EmailAlreadyExistsException();
     }
 
-    if (!isValidPassword(password)) {
+    if (!ValidationUtils.isValidPassword(password)) {
       throw new InvalidCredentialsException("Password should be greater than 8 characters");
     }
 
@@ -91,14 +92,7 @@ public class AuthService {
     return new UserCreationView(user.getUserId(), user.getEmail());
   }
 
-  private static boolean isValidPassword(String password) {
-    return password != null && password.length() >= 8;
-  }
 
-  private static boolean isValidEmail(String email) {
-    String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    return email != null && email.matches(regex);
-  }
 
   public JWTToken login(String email, String password) throws InvalidCredentialsException {
     try {

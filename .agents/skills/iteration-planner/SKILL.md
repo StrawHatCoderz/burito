@@ -185,21 +185,39 @@ gate is cleared.
 Generate stories that are:
 
 - **Vertically sliced** — each story delivers end-to-end value (DB → service →
-  API → test), not a horizontal layer
+  API → frontend), not a horizontal layer
 - **Independently completable** — a story should not require another story to be
-  merged first, unless explicitly sequenced
+  merged first, unless explicitly sequenced via priority and dependencies
 - **Bounded context-aware** — do not reach across bounded contexts without
   calling it out
+- **Behaviour-focused, not implementation-focused** — acceptance criteria describe
+  WHAT the system does, not HOW it is built. Technical implementation details
+  belong in Technical Notes, not in acceptance criteria or task lists.
 
 ### Story sizing guidance
 
-| Size | Effort | What fits |
-|------|--------|-----------|
+| Complexity | Effort | What fits |
+|------------|--------|-----------|
 | XS | < 2h | Config change, adding a field, tiny refactor |
-| S | ~half day | Single endpoint with tests |
+| S | ~half day | Single endpoint with tests, simple UI component |
 | M | ~1 day | New service + repository + endpoint + tests |
-| L | ~2 days | New bounded context stub, complex query, multi-step flow |
+| L | ~2 days | New bounded context stub, complex multi-step flow |
 | XL | > 2 days | **Must be split — never generate an XL story** |
+
+### Priority system
+
+Priority is NOT "must-have vs nice-to-have" — every story in an iteration is
+intentional. Priority indicates **dependency ordering** within the iteration:
+
+| Priority | Meaning |
+|----------|---------|
+| P1 — critical | Foundation. No dependencies on other stories in this iteration. Can start immediately. |
+| P2 — high | Depends on one or more P1 stories. Start after foundations are merged. |
+| P3 — medium | Depends on P2 stories. Builds on top of established features. |
+| P4 — low | Final layer. Depends on most other stories. Polish, integration, or UX. |
+
+Assign priority based on the **dependency graph**, not perceived importance.
+Every story in an accepted iteration is worth building.
 
 ### Iteration story count guidance
 
@@ -234,78 +252,123 @@ Where N is the iteration number determined in Phase 1.3.
 
 Examples:
 
-- `BR-001-pre-iteration-cleanup.md`
-- `BR-002-create-menu-item-entity.md`
-- `BR-007-list-menu-items-by-restaurant.md`
+- `BR-001-user-registration-and-login.md`
+- `BR-002-restaurant-listing-and-detail.md`
+- `BR-007-ci-pipeline.md`
 
-Story IDs are **sequential and never recycled**. If Iteration 1 ended at BR-007,
-Iteration 2 starts at BR-008.
+Story IDs are **sequential and never recycled**. If Iteration 7 ended at BR-702,
+Iteration 8 starts at BR-801.
 
 ### Story file template
 
 Write one `.md` file per story using this exact template:
 
 ```markdown
-# [PREFIX]-[NNN] — [Story Title]
+# [PREFIX]-[NNN]
+## [Story Title — concise, descriptive, business-readable]
 
-**Iteration:** [N]
-**Type:** Feature | Cleanup | Chore | Spike
-**Size:** XS | S | M | L
-**Bounded Context:** [e.g. Menu, Order, Auth, Infrastructure]
-**Priority:** Must-have | Should-have | Nice-to-have
+Complexity: [XS | S | M | L]  ·  Module: [e.g. Identity | Catalog | Ordering | Delivery | Infra] <span style="float: right;">**[P1 | P2 | P3 | P4] — [critical | high | medium | low]**</span>
 
 ---
 
-## User Story
+**BUSINESS GOAL**
 
-> As a [role], I want to [action], so that [benefit].
-
-*(For Cleanup/Chore stories: "As a developer, I want to [clean up X], so that
-[the codebase is easier to reason about / future stories are easier to build
-on top of].)*
+[2–4 sentences explaining WHY this story exists and what value it delivers. Written from a product perspective, not a technical one. Answer: "What breaks or is impossible if we don't build this?"]
 
 ---
 
-## Context
+**DEPENDENCIES**
 
-[2–4 sentences explaining why this story exists, what problem it solves, and how
-it relates to the current project state. Reference specific files, classes, or
-antipatterns by name where relevant.]
+[List of story IDs this depends on with a brief reason, or "None — this is a foundation story."]
 
 ---
 
-## Acceptance Criteria
+**ACCEPTANCE CRITERIA**
 
-- [ ] [Concrete, testable criterion — describe observable behaviour, not implementation]
-- [ ] [Each AC maps to something you can verify manually or via a test]
-- [ ] [Include at least one AC about test coverage for feature stories]
-- [ ] [Include at least one AC about CI passing for every story]
+✓ [Criterion 1 — observable behavior]
+✓ [Criterion 2 — observable behavior]
 
 ---
 
-## Technical Tasks
+**SCENARIOS**
 
-- [ ] [Concrete implementation step — name the class, method, file, or migration]
-- [ ] [Keep tasks at the level of: "Create X", "Add Y to Z", "Write migration for W"]
-- [ ] [Include task for unit test(s)]
-- [ ] [Include task for integration test(s) where applicable]
-- [ ] [Include task to verify CI passes]
+> **Given** [preconditions]
+> **When** [action / event]
+> **Then** [expected outcome]
 
----
-
-## Out of Scope
-
-- [Explicitly list what this story does NOT include, to prevent scope creep]
-- [Reference future stories or iteration for deferred work]
+> **Given** [preconditions]
+> **When** [action / event]
+> **Then** [expected outcome]
 
 ---
 
-## Notes / Design Decisions
+**TECHNICAL NOTES**
 
-[Optional. Record any architecture choices, tradeoffs, or open questions. If this
-story introduces a new pattern — e.g. a new bounded context, a new exception type
-— document the intent here so future stories stay consistent.]
+[Implementation guidance for the developer using `code` formatting for technical terms. No task checklists; the implementer decides the exact steps.]
+
+---
+
+**EDGE CASES**
+
+⚠ [Edge Case 1 — description of what happens and expected decision]
+⚠ [Edge Case 2 — description of what happens and expected decision]
+
+---
+
+**TESTING REQUIREMENTS**
+
+✓ [Requirement 1 — unit, integration, frontend, or security]
+✓ [Requirement 2 — unit, integration, frontend, or security]
+
+---
+
+**OBSERVABILITY**
+
+[What should be logged, monitored, or alerted on. If nothing new, "No new observability requirements — existing logging is sufficient."]
+
+---
+
+**RISKS**
+
+⚠ Risk: [Description of risk and its mitigation]
+
+---
+
+**REFACTOR TRIGGERS**
+
+⚠ Refactor when: [Description of trigger condition to pay off debt or scale up]
 ```
+
+### Writing guidance for each section
+
+**Business goal:** Write as if explaining to a non-technical product owner. No
+jargon. No class names. "Users need to save a delivery address so orders can
+be delivered" — not "Add address fields to User entity."
+
+**Acceptance criteria:** Each criterion should be verifiable without reading the
+source code. "Expired tokens return 401, not 500" is good. "Use `@PreAuthorize`
+on the controller" is not — that's an implementation detail for Technical Notes.
+
+**Scenarios:** Use Given/When/Then rigorously. Each scenario should test ONE
+behaviour. Cover at least: the happy path, one invalid-input path, one
+auth/permissions path.
+
+**Technical notes:** Provide the schema, the key architectural decisions, the
+library choices. Reference existing patterns in the codebase. Do NOT write a
+step-by-step task list — the planning and task-creation skills handle that.
+
+**Edge cases:** Think adversarially. What happens with null input? Concurrent
+requests? Missing foreign keys? Network failures? Stale data? State each case
+and the expected outcome.
+
+**Testing requirements:** Name the categories and what matters, not the test
+methods. "Integration: full HTTP cycle with auth, assert response shape" is
+useful. "Write `AdminOrderControllerTest.testAssignDriver()`" is too
+prescriptive.
+
+**Risks:** Be honest. If you're accepting technical debt, name it. If there's a
+scalability concern, document it. If there's a security gap, flag it. This
+section is the future engineer's safety net.
 
 ---
 
@@ -316,11 +379,11 @@ After generating all story files, produce a summary table in the conversation:
 ```
 ## Iteration N — Story Summary
 
-| ID | Title | Type | Size | Bounded Context | Priority |
-|----|-------|------|------|-----------------|----------|
-| BR-001 | Pre-Iteration Cleanup | Cleanup | M | Infrastructure | Must-have |
-| BR-002 | Create MenuItem Entity | Feature | S | Menu | Must-have |
-| ...  | ... | ... | ... | ... | ... |
+| ID | Title | Complexity | Module | Priority |
+|----|-------|-----------|--------|----------|
+| BR-801 | User profile and address management | M | Identity | P1 — critical |
+| BR-802 | Checkout address gate | S | Ordering | P2 — high |
+| ...  | ... | ... | ... | ... |
 
 **Total stories:** N
 **Files written to:** docs/iterations/iteration-N/
@@ -341,13 +404,17 @@ ready.
 
 | Principle | Rule |
 |-----------|------|
+| Behaviour over implementation | Acceptance criteria describe what the system does, never how it's built |
 | Surface decisions explicitly | Never silently choose between cleanup-first vs feature-first — make the user decide |
 | Bounded context discipline | If a story causes a service to reach into another context's repository, call it out |
 | Cleanup is never optional to mention | If structural issues exist, always surface them as an explicit option |
-| Tests are not optional | Every feature story must include tasks for unit and integration tests — "write tests" is not a task, name what you are testing |
+| Tests are requirements, not tasks | Testing requirements describe what coverage is needed; the implementer decides how |
 | IDs are sequential | Never recycle or reuse a story ID |
+| Priority = dependency order | P1 stories have no deps; P2 depends on P1; P3 on P2; P4 on P3 |
 | Assumptions before stories | Never assume silently on bounded context ownership, table naming, service boundaries, or story prefix |
 | Review gate before writing | Never write story files before Phase 4 assumption confirmation |
+| Technical notes, not task lists | Stories provide implementation guidance, not step-by-step checklists |
+| Edge cases are first-class | Every story must consider failure modes, boundary conditions, and limitations |
 
 ---
 

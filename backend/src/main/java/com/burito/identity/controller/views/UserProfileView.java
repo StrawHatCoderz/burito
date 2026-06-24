@@ -3,6 +3,7 @@ package com.burito.identity.controller.views;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.burito.identity.domain.UserAddress;
 
 @Schema(description = "Profile of the currently authenticated user")
 public record UserProfileView(
@@ -14,6 +15,12 @@ public record UserProfileView(
 
     @Schema(description = "Full name", example = "Jane Doe")
     String name,
+
+    @Schema(description = "Phone number", example = "1234567890")
+    String phoneNumber,
+
+    @Schema(description = "Delivery address")
+    UserAddress address,
 
     @Schema(description = "Account creation timestamp", example = "2025-01-15T10:30:00")
     LocalDateTime createdAt
