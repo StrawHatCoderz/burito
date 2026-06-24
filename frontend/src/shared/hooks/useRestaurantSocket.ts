@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { useWebSocket } from '../context/WebSocketContext'
 
 export interface AvailabilityEvent {

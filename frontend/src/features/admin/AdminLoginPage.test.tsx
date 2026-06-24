@@ -37,7 +37,7 @@ describe('AdminLoginPage', () => {
   })
 
   it('handles successful login', async () => {
-    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'admin-token', refreshToken: 'admin-refresh-token' })
+    vi.mocked(adminLogin).mockResolvedValue({ data: { accessToken: 'admin-token', refreshToken: 'admin-refresh-token' } } as any)
     
     render(
       <MemoryRouter>

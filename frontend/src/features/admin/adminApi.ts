@@ -20,16 +20,16 @@ export interface MenuItemPayload {
 }
 
 export const getAdminRestaurant = async (id: string): Promise<Restaurant> => {
-  const { data } = await client.get<Restaurant>(`/admin/restaurants/${id}`)
-  return data
+  const { data } = await client.get<ApiResponse<Restaurant>>(`/admin/restaurants/${id}`)
+  return data.data!
 }
 
 export const updateAdminRestaurant = async (
   id: string,
   payload: UpdateRestaurantPayload
 ): Promise<Restaurant> => {
-  const { data } = await client.put<Restaurant>(`/admin/restaurants/${id}`, payload)
-  return data
+  const { data } = await client.put<ApiResponse<Restaurant>>(`/admin/restaurants/${id}`, payload)
+  return data.data!
 }
 
 export const getAdminMenu = async (restaurantId: string): Promise<MenuItem[]> => {
@@ -41,8 +41,8 @@ export const addMenuItem = async (
   restaurantId: string,
   payload: MenuItemPayload
 ): Promise<MenuItem> => {
-  const { data } = await client.post<MenuItem>(`/admin/restaurants/${restaurantId}/menu`, payload)
-  return data
+  const { data } = await client.post<ApiResponse<MenuItem>>(`/admin/restaurants/${restaurantId}/menu`, payload)
+  return data.data!
 }
 
 export const updateMenuItem = async (
@@ -50,8 +50,8 @@ export const updateMenuItem = async (
   menuItemId: string,
   payload: MenuItemPayload
 ): Promise<MenuItem> => {
-  const { data } = await client.put<MenuItem>(`/admin/restaurants/${restaurantId}/menu/${menuItemId}`, payload)
-  return data
+  const { data } = await client.put<ApiResponse<MenuItem>>(`/admin/restaurants/${restaurantId}/menu/${menuItemId}`, payload)
+  return data.data!
 }
 
 export const deleteMenuItem = async (

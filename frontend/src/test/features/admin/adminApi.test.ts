@@ -27,14 +27,14 @@ describe('adminApi', () => {
   }
 
   it('getAdminRestaurant calls GET with correct URL', async () => {
-    vi.mocked(client.get).mockResolvedValue({ data: mockRestaurant })
+    vi.mocked(client.get).mockResolvedValue({ data: { success: true, data: mockRestaurant, error: null } })
     const res = await getAdminRestaurant('123')
     expect(client.get).toHaveBeenCalledWith('/admin/restaurants/123')
     expect(res).toEqual(mockRestaurant)
   })
 
   it('updateAdminRestaurant calls PUT with correct URL and payload', async () => {
-    vi.mocked(client.put).mockResolvedValue({ data: mockRestaurant })
+    vi.mocked(client.put).mockResolvedValue({ data: { success: true, data: mockRestaurant, error: null } })
     const payload = { open: false }
     const res = await updateAdminRestaurant('123', payload)
     expect(client.put).toHaveBeenCalledWith('/admin/restaurants/123', payload)
@@ -59,7 +59,7 @@ describe('adminApi', () => {
     it('should add a menu item', async () => {
       const payload = { name: 'Tacos', description: null, price: 10, category: 'MAINS', isAvailable: true, imageUrl: null }
       const mockResponse = { menuItemId: '1', ...payload }
-      vi.mocked(client.post).mockResolvedValueOnce({ data: mockResponse })
+      vi.mocked(client.post).mockResolvedValueOnce({ data: { success: true, data: mockResponse, error: null } })
 
       const { addMenuItem } = await import('../../../features/admin/adminApi')
       const result = await addMenuItem(mockRestaurantId, payload)
@@ -71,7 +71,7 @@ describe('adminApi', () => {
     it('should update a menu item', async () => {
       const payload = { name: 'Burritos', description: null, price: 12, category: 'MAINS', isAvailable: true, imageUrl: null }
       const mockResponse = { menuItemId: mockMenuItemId, ...payload }
-      vi.mocked(client.put).mockResolvedValueOnce({ data: mockResponse })
+      vi.mocked(client.put).mockResolvedValueOnce({ data: { success: true, data: mockResponse, error: null } })
 
       const { updateMenuItem } = await import('../../../features/admin/adminApi')
       const result = await updateMenuItem(mockRestaurantId, mockMenuItemId, payload)

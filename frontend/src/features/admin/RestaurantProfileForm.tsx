@@ -21,6 +21,7 @@ import type { SvgIconProps } from '@mui/material'
 import { getAdminRestaurant, updateAdminRestaurant } from './adminApi'
 import type { UpdateRestaurantPayload } from './adminApi'
 import { useAuth } from '../../shared/hooks/useAuth'
+import { extractErrorMessage } from '../../shared/api/types'
 import { MenuManager } from './MenuManager'
 
 const EditIcon = (props: SvgIconProps) => (
@@ -74,7 +75,7 @@ export function RestaurantProfileForm() {
           open: Boolean(profile.open),
         })
       } catch (err: any) {
-        setError('Failed to load profile. ' + (err.response?.data?.message || err.message))
+        setError('Failed to load profile. ' + extractErrorMessage(err))
       } finally {
         setLoading(false)
       }
@@ -108,7 +109,7 @@ export function RestaurantProfileForm() {
       setFormData(prev => ({ ...prev, open: newStatus }))
       setSuccess(true)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to update status')
+      setError(extractErrorMessage(err))
     } finally {
       setStatusUpdating(false)
     }
@@ -132,7 +133,7 @@ export function RestaurantProfileForm() {
       setSuccess(true)
       setIsEditMode(false)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to update profile')
+      setError(extractErrorMessage(err))
     } finally {
       setSaving(false)
     }
@@ -331,7 +332,7 @@ export function RestaurantProfileForm() {
       </Box>
 
       <Box sx={{ px: { xs: 3, md: 4 }, pb: { xs: 3, md: 4 } }}>
-        <MenuManager restaurantId={restaurantId} />
+        {restaurantId && <MenuManager restaurantId={restaurantId} />}
       </Box>
 
       <Snackbar

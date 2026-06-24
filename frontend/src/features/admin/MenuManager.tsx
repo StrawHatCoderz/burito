@@ -23,6 +23,7 @@ import { SvgIcon } from '@mui/material'
 import type { SvgIconProps } from '@mui/material'
 import { getAdminMenu, addMenuItem, updateMenuItem, deleteMenuItem } from './adminApi'
 import type { MenuItemPayload } from './adminApi'
+import { extractErrorMessage } from '../../shared/api/types'
 import type { MenuItem } from '../catalog/types'
 import { MenuItemForm } from './MenuItemForm'
 
@@ -70,7 +71,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
       setMenuItems(items)
       setError(null)
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch menu items')
+      setError(extractErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -113,7 +114,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
       setSuccessMsg('Menu item deleted successfully')
       fetchMenu()
     } catch (err: any) {
-      setError(err.message || 'Failed to delete menu item')
+      setError(extractErrorMessage(err))
     } finally {
       setDeleteConfirmOpen(false)
       setItemToDelete(null)

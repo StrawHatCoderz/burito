@@ -13,8 +13,9 @@ import { Toast } from '../../shared/ui/Toast'
 import { useAuth } from '../../shared/hooks/useAuth'
 import { useRestaurantSocket } from '../../shared/hooks/useRestaurantSocket'
 import { useNavigate } from 'react-router-dom'
+import { extractErrorMessage } from '../../shared/api/types'
 
-const CartItemRow = ({ item, onError, restaurantOpen }: { item: any; onError: (msg: string) => void; restaurantOpen: boolean }) => {
+const CartItemRow = ({ item, onError, restaurantOpen }: { item: any; onError: (msg: string) => void; restaurantOpen: boolean; isUnavailable?: boolean }) => {
   const { optimisticAdd, optimisticDecrement, optimisticRemove, syncFromBackend, rollback } = useCart()
   const [status, setStatus] = useState<'idle' | 'loading'>('idle')
 
@@ -170,7 +171,7 @@ export const CartDrawer = () => {
       closeCartDrawer()
       navigate('/orders/active')
     } catch (e: any) {
-      showError(e.message || 'Failed to place order.')
+      showError(extractErrorMessage(e))
     } finally {
       setIsCheckingOut(false)
     }

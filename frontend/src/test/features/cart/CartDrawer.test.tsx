@@ -112,7 +112,7 @@ describe('CartDrawer', () => {
     const promise = new Promise((_, reject) => {
       rejectPromise = reject
     })
-    vi.mocked(cartApi.removeCartItem).mockReturnValue(promise)
+    vi.mocked(cartApi.removeCartItem).mockReturnValue(promise as any)
 
     renderWithProvider(mockCartSingleItem)
     await user.click(screen.getByText('Open'))

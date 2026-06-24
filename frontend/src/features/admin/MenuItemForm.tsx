@@ -19,6 +19,7 @@ import {
 import type { SvgIconProps } from '@mui/material'
 import type { MenuItemPayload } from './adminApi'
 import type { MenuItem } from '../catalog/types'
+import { extractErrorMessage } from '../../shared/api/types'
 
 const CloseIcon = (props: SvgIconProps) => (
   <SvgIcon {...props}>
@@ -111,7 +112,7 @@ export function MenuItemForm({ open, onClose, initialData, onSubmit }: MenuItemF
       await onSubmit(payload)
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to save menu item.')
+      setError(extractErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

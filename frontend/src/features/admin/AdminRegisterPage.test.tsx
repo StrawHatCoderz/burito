@@ -39,7 +39,7 @@ describe('AdminRegisterPage', () => {
 
   it('handles successful registration', async () => {
     vi.mocked(adminRegister).mockResolvedValue({ success: true })
-    vi.mocked(adminLogin).mockResolvedValue({ accessToken: 'test-token', refreshToken: 'test-refresh-token' })
+    vi.mocked(adminLogin).mockResolvedValue({ data: { accessToken: 'test-token', refreshToken: 'test-refresh-token' } } as any)
     
     render(
       <MemoryRouter>

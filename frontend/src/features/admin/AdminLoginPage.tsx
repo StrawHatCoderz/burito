@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import { adminLogin } from '../../shared/api/authApi'
 import { useAuth } from '../../shared/hooks/useAuth'
+import { extractErrorMessage } from '../../shared/api/types'
 import bgImage from '../../assets/admin_register_bg.webp'
 
 export function AdminLoginPage() {
@@ -37,10 +38,10 @@ export function AdminLoginPage() {
 
     try {
       const response = await adminLogin({ email, password })
-      login(response.accessToken, response.refreshToken, true)
+      login(response.data.accessToken, response.data.refreshToken, true)
       navigate('/admin/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Login failed')
+      setError(extractErrorMessage(err))
     } finally {
       setLoading(false)
     }

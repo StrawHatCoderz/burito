@@ -20,6 +20,7 @@ import {
 } from '@mui/material'
 import { adminRegister, adminLogin } from '../../shared/api/authApi'
 import { useAuth } from '../../shared/hooks/useAuth'
+import { extractErrorMessage } from '../../shared/api/types'
 import bgImage from '../../assets/admin_register_bg.webp'
 
 export function AdminRegisterPage() {
@@ -60,10 +61,10 @@ export function AdminRegisterPage() {
       }
       await adminRegister(payload)
       const loginResponse = await adminLogin({ email: formData.email, password: formData.password })
-      login(loginResponse.accessToken, loginResponse.refreshToken, true)
+      login(loginResponse.data.accessToken, loginResponse.data.refreshToken, true)
       navigate('/admin/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Registration failed')
+      setError(extractErrorMessage(err))
     } finally {
       setLoading(false)
     }

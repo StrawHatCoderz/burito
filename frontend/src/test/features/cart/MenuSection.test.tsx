@@ -98,7 +98,7 @@ describe('MenuSection Add to Cart', () => {
     const promise = new Promise((_, reject) => {
       rejectPromise = reject
     })
-    vi.mocked(cartApi.addToCart).mockReturnValue(promise)
+    vi.mocked(cartApi.addToCart).mockReturnValue(promise as any)
 
     renderWithProvider([mockMenuItem])
 

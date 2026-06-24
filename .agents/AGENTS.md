@@ -101,3 +101,19 @@ mapping logic is in the wrong place.
 | API Responses      | `APIResponse<T>` wrapper on all controller return values        |
 | Timestamps         | `LocalDateTime` for all date-time fields across entities        |
 | Coverage Tool      | JaCoCo — run `jacocoTestReport` and verify before committing    |
+
+---
+
+## 8. Frontend-Backend API Response Contracts
+
+All backend controllers wrap response payloads inside the standard `APIResponse<T>` envelope. To maintain consistent behavior and prevent runtime crashes:
+
+- **Frontend Client Data Extraction**:
+  All frontend API client methods hitting wrapped backend endpoints must explicitly unwrap the payload using `data.data` (e.g. `const { data } = await client.get<ApiResponse<T>>(...)` and return `data.data`), rather than returning the raw Axios response body (`data`).
+  - **Exception**: Authentication endpoints, which return tokens directly within the nested payload (`response.data.accessToken` and `response.data.refreshToken`).
+
+- **Test Mock Alignment**:
+  Any mock setup in frontend testing environments must mimic this exact response envelope structure. Network mock results must resolve inside a `{ data: { success: true, data: mockObject, error: null } }` object to ensure they align with the real backend.
+
+- **Unified Error Parsing**:
+  Always use the central `extractErrorMessage(error)` utility in catch blocks rather than accessing raw Axios messages (`err.message` or `err.response?.data?.message`). This correctly retrieves wrapped backend errors (`error.message`) and provides robust fallbacks for network issues.
